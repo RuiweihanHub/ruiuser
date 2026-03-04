@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "username": "Xvjiarui",
+      "passwordHash": "o7dyuk",
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "username": "Ruiweihan",
+      "passwordHash": "6052ni",
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "username": "Administrator",
+      "passwordHash": "1u98e9",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
