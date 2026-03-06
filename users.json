@@ -1,24 +1,71 @@
 {
+  "version": "2.0",
+  "nextUid": 3,
   "users": [
     {
-      "username": "Xvjiarui",
-      "passwordHash": "o7dyuk",
-      "createdAt": "2024-01-01T00:00:00Z"
-    },
-    {
-      "username": "Ruiweihan",
-      "passwordHash": "6052ni",
-      "createdAt": "2024-01-01T00:00:00Z"
-    },
-    {
+      "uid": "Administrator",
       "username": "Administrator",
+      "displayName": "系统管理员",
       "passwordHash": "1u98e9",
-      "createdAt": "2024-01-01T00:00:00Z"
+      "role": "admin",
+      "status": "active",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "profile": {
+        "avatar": null,
+        "bio": "系统管理员账户",
+        "email": null
+      }
     },
     {
-      "username": "ruitest",
-      "passwordHash": "us79fg",
-      "createdAt": "2026-03-06T10:33:11.685Z"
+      "uid": "000001",
+      "username": "Ruiweihan",
+      "displayName": "Ruiweihan",
+      "passwordHash": "6052ni",
+      "role": "admin",
+      "status": "active",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "profile": {
+        "avatar": null,
+        "bio": "创始人",
+        "email": null
+      }
+    },
+    {
+      "uid": "000002",
+      "username": "Xvjiarui",
+      "displayName": "Xvjiarui",
+      "passwordHash": "o7dyuk",
+      "role": "user",
+      "status": "active",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "profile": {
+        "avatar": null,
+        "bio": null,
+        "email": null
+      }
     }
-  ]
+  ],
+  "index": {
+    "byUid": {
+      "Administrator": 0,
+      "000001": 1,
+      "000002": 2
+    },
+    "byUsername": {
+      "Administrator": 0,
+      "Ruiweihan": 1,
+      "Xvjiarui": 2
+    }
+  },
+  "stats": {
+    "totalUsers": 3,
+    "totalLogins": 0,
+    "lastRegistration": "2024-01-01T00:00:00Z"
+  }
 }
