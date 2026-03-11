@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "nextUid": 3,
   "users": [
     {
@@ -12,6 +12,7 @@
       "createdAt": "2024-01-01T00:00:00Z",
       "lastLogin": null,
       "loginCount": 0,
+      "friends": ["000001", "000002"],
       "profile": {
         "avatar": null,
         "bio": "系统管理员账户",
@@ -28,6 +29,7 @@
       "createdAt": "2024-01-01T00:00:00Z",
       "lastLogin": null,
       "loginCount": 0,
+      "friends": ["Administrator", "000002"],
       "profile": {
         "avatar": null,
         "bio": "创始人",
@@ -44,6 +46,7 @@
       "createdAt": "2024-01-01T00:00:00Z",
       "lastLogin": null,
       "loginCount": 0,
+      "friends": ["Administrator", "000001"],
       "profile": {
         "avatar": null,
         "bio": null,
