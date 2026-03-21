@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注册 - Rui Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .step-indicator {
+      transition: all 0.3s ease;
+    }
+    .step-active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .step-done {
+      background: #10b981;
+      color: white;
+    }
+    .step-pending {
+      background: #e5e7eb;
+      color: #9ca3af;
+    }
+    .password-strength {
+      height: 4px;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-violet-50 text-gray-900 flex flex-col">
+  
+  <!-- 顶部导航栏 -->
+  <nav class="w-full px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <a href="index.html" class="text-xl font-semibold text-gray-900 hover:text-violet-600 transition-colors">Rui</a>
+        <div class="flex items-center gap-6 text-sm">
+          <a href="projects.html" class="text-gray-500 hover:text-gray-900 transition-colors">项目</a>
+          <a href="toolbox.html" class="text-gray-500 hover:text-gray-900 transition-colors">百宝箱</a>
+          <a href="download.html" class="text-gray-500 hover:text-gray-900 transition-colors">下载</a>
+          <a href="chat.html" class="text-gray-500 hover:text-gray-900 transition-colors">💬 聊天</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="px-4 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors">登录</a>
+        <a href="register.html" class="px-4 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors">注册</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主内容 -->
+  <main class="flex-1 flex items-center justify-center px-6 py-8">
+    <div class="w-full max-w-md">
+      <!-- 步骤指示器 -->
+      <div class="flex items-center justify-center gap-2 mb-8">
+        <div id="step1Indicator" class="step-indicator w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium step-active">1</div>
+        <div class="w-12 h-0.5 bg-gray-200" id="line1"></div>
+        <div id="step2Indicator" class="step-indicator w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium step-pending">2</div>
+        <div class="w-12 h-0.5 bg-gray-200" id="line2"></div>
+        <div id="step3Indicator" class="step-indicator w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium step-pending">3</div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <!-- 步骤标题 -->
+        <div class="p-6 border-b border-gray-100">
+          <h2 id="stepTitle" class="text-lg font-semibold text-gray-900">创建账户</h2>
+          <p id="stepDesc" class="text-sm text-gray-500 mt-1">请输入您的用户名</p>
+        </div>
+
+        <!-- 步骤1: 用户名 -->
+        <div id="step1" class="p-6 space-y-4">
+          <div id="errorMsg1" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 fade-in"></div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">用户名</label>
+            <input id="username" type="text" placeholder="例如: Ruiweihan" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-violet-300 focus:bg-white transition-colors" />
+            <p class="mt-2 text-xs text-gray-400">用户名用于登录和展示，2-20个字符</p>
+          </div>
+          
+          <button type="button" id="nextBtn1" class="w-full py-3 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors">下一步</button>
+          
+          <div class="text-center text-sm text-gray-500">
+            已有账号？<a href="index.html" class="text-violet-600 hover:text-violet-700 font-medium">立即登录</a>
+          </div>
+        </div>
+
+        <!-- 步骤2: 密码 -->
+        <div id="step2" class="p-6 space-y-4 hidden">
+          <div id="errorMsg2" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 fade-in"></div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">创建密码</label>
+            <div class="relative">
+              <input id="password" type="password" placeholder="请输入密码" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-violet-300 focus:bg-white transition-colors pr-10" />
+              <button type="button" id="togglePassword1" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              </button>
+            </div>
+            <!-- 密码强度指示 -->
+            <div class="mt-2 space-y-2">
+              <div class="flex gap-1">
+                <div id="strength1" class="password-strength flex-1 bg-gray-200"></div>
+                <div id="strength2" class="password-strength flex-1 bg-gray-200"></div>
+                <div id="strength3" class="password-strength flex-1 bg-gray-200"></div>
+                <div id="strength4" class="password-strength flex-1 bg-gray-200"></div>
+              </div>
+              <p id="strengthText" class="text-xs text-gray-400">密码至少4个字符</p>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">确认密码</label>
+            <div class="relative">
+              <input id="confirmPassword" type="password" placeholder="请再次输入密码" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-violet-300 focus:bg-white transition-colors pr-10" />
+              <button type="button" id="togglePassword2" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="button" id="backBtn2" class="flex-1 py-3 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors">上一步</button>
+            <button type="button" id="nextBtn2" class="flex-1 py-3 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 transition-colors">下一步</button>
+          </div>
+        </div>
+
+        <!-- 步骤3: 完成 -->
+        <div id="step3" class="p-6 space-y-4 hidden">
+          <div id="errorMsg3" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 fade-in"></div>
+          <div id="successMsg" class="hidden p-3 bg-green-50 border border-green-100 rounded-xl text-sm text-green-600 fade-in"></div>
+          
+          <!-- 账户信息摘要 -->
+          <div class="p-4 bg-gray-50 rounded-xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-500">用户名</span>
+              <span id="summaryUsername" class="text-sm font-medium text-gray-900">-</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-500">UID</span>
+              <span id="summaryUid" class="text-sm font-medium text-violet-600">注册后分配</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-500">密码</span>
+              <span class="text-sm font-medium text-gray-900">••••••</span>
+            </div>
+          </div>
+          
+          <div class="p-4 bg-violet-50 rounded-xl">
+            <p class="text-sm text-violet-700">点击"创建账户"完成注册，您的UID将自动分配。</p>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="button" id="backBtn3" class="flex-1 py-3 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors">上一步</button>
+            <button type="button" id="createBtn" class="flex-1 py-3 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">创建账户</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 服务条款 -->
+      <div class="mt-4 text-center text-xs text-gray-400">
+        点击"创建账户"即表示您同意我们的 <a href="#" class="text-violet-600 hover:text-violet-700">服务条款</a> 和 <a href="#" class="text-violet-600 hover:text-violet-700">隐私政策</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-center text-xs text-gray-400">
+      <span>© 2026 Rui Hub</span>
+    </div>
+  </footer>
+
+  <!-- 引入用户管理系统 -->
+  <script src="auth.js"></script>
+  
+  <script>
+    // 本地备用用户（快速检查）
+    const LOCAL_USERS = { 'Xvjiarui': true, 'Ruiweihan': true, 'Administrator': true };
+
+    // 步骤状态
+    let currentStep = 1;
+    let formData = {
+      username: '',
+      password: ''
+    };
+
+    // DOM 元素
+    const steps = {
+      1: document.getElementById('step1'),
+      2: document.getElementById('step2'),
+      3: document.getElementById('step3')
+    };
+    const indicators = {
+      1: document.getElementById('step1Indicator'),
+      2: document.getElementById('step2Indicator'),
+      3: document.getElementById('step3Indicator')
+    };
+    const lines = {
+      1: document.getElementById('line1'),
+      2: document.getElementById('line2')
+    };
+    const stepTitle = document.getElementById('stepTitle');
+    const stepDesc = document.getElementById('stepDesc');
+
+    // 切换步骤
+    function goToStep(step) {
+      // 隐藏所有步骤
+      Object.values(steps).forEach(s => s.classList.add('hidden'));
+      
+      // 显示当前步骤
+      steps[step].classList.remove('hidden');
+      
+      // 更新指示器
+      for (let i = 1; i <= 3; i++) {
+        indicators[i].classList.remove('step-active', 'step-done', 'step-pending');
+        if (i < step) {
+          indicators[i].classList.add('step-done');
+          indicators[i].innerHTML = '✓';
+        } else if (i === step) {
+          indicators[i].classList.add('step-active');
+          indicators[i].innerHTML = i;
+        } else {
+          indicators[i].classList.add('step-pending');
+          indicators[i].innerHTML = i;
+        }
+      }
+      
+      // 更新连接线
+      if (step > 1) {
+        lines[1].classList.add('bg-green-400');
+        lines[1].classList.remove('bg-gray-200');
+      } else {
+        lines[1].classList.remove('bg-green-400');
+        lines[1].classList.add('bg-gray-200');
+      }
+      if (step > 2) {
+        lines[2].classList.add('bg-green-400');
+        lines[2].classList.remove('bg-gray-200');
+      } else {
+        lines[2].classList.remove('bg-green-400');
+        lines[2].classList.add('bg-gray-200');
+      }
+      
+      // 更新标题
+      const titles = {
+        1: { title: '创建账户', desc: '请输入您的用户名' },
+        2: { title: '创建密码', desc: '为您的账户设置一个安全的密码' },
+        3: { title: '确认信息', desc: '请确认您的账户信息' }
+      };
+      stepTitle.textContent = titles[step].title;
+      stepDesc.textContent = titles[step].desc;
+      
+      currentStep = step;
+    }
+
+    // 步骤1: 用户名验证
+    document.getElementById('nextBtn1').addEventListener('click', () => {
+      const username = document.getElementById('username').value.trim();
+      const errorEl = document.getElementById('errorMsg1');
+      
+      if (!username) {
+        errorEl.textContent = '请输入用户名';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      if (username.length < 2 || username.length > 20) {
+        errorEl.textContent = '用户名长度需为2-20个字符';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      if (!/^[\u4e00-\u9fa5a-zA-Z0-9_]+$/.test(username)) {
+        errorEl.textContent = '用户名只能包含中文、字母、数字和下划线';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      if (LOCAL_USERS[username]) {
+        errorEl.textContent = '该用户名已被使用';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      errorEl.classList.add('hidden');
+      formData.username = username;
+      document.getElementById('summaryUsername').textContent = username;
+      goToStep(2);
+    });
+
+    // 密码强度检测
+    document.getElementById('password').addEventListener('input', (e) => {
+      const password = e.target.value;
+      let strength = 0;
+      
+      if (password.length >= 4) strength++;
+      if (password.length >= 8) strength++;
+      if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+      if (/[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) strength++;
+      
+      const colors = ['#ef4444', '#f59e0b', '#10b981', '#059669'];
+      const texts = ['弱', '一般', '较强', '强'];
+      
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`strength${i}`);
+        if (i <= strength) {
+          el.style.background = colors[strength - 1];
+        } else {
+          el.style.background = '#e5e7eb';
+        }
+      }
+      
+      document.getElementById('strengthText').textContent = password ? `密码强度: ${texts[strength - 1] || '太弱'}` : '密码至少4个字符';
+    });
+
+    // 显示/隐藏密码
+    document.getElementById('togglePassword1').addEventListener('click', () => {
+      const input = document.getElementById('password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+    document.getElementById('togglePassword2').addEventListener('click', () => {
+      const input = document.getElementById('confirmPassword');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+
+    // 步骤2: 密码验证
+    document.getElementById('nextBtn2').addEventListener('click', () => {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const errorEl = document.getElementById('errorMsg2');
+      
+      if (!password) {
+        errorEl.textContent = '请输入密码';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      if (password.length < 4) {
+        errorEl.textContent = '密码至少需要4个字符';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        errorEl.textContent = '两次输入的密码不一致';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      errorEl.classList.add('hidden');
+      formData.password = password;
+      goToStep(3);
+    });
+
+    // 返回按钮
+    document.getElementById('backBtn2').addEventListener('click', () => goToStep(1));
+    document.getElementById('backBtn3').addEventListener('click', () => goToStep(2));
+
+    // 创建账户
+    document.getElementById('createBtn').addEventListener('click', async () => {
+      const createBtn = document.getElementById('createBtn');
+      const errorEl = document.getElementById('errorMsg3');
+      const successEl = document.getElementById('successMsg');
+      
+      createBtn.disabled = true;
+      createBtn.textContent = '创建中...';
+      errorEl.classList.add('hidden');
+      
+      try {
+        const auth = await getAuth();
+        const result = await auth.register(formData.username, formData.password);
+        
+        if (result.success) {
+          document.getElementById('summaryUid').textContent = result.user.uid;
+          successEl.textContent = `注册成功！您的UID: ${result.user.uid}`;
+          successEl.classList.remove('hidden');
+          
+          setTimeout(() => {
+            setLoginState(formData.username, result.user.uid, false);
+            window.location.href = 'index.html';
+          }, 1500);
+        } else {
+          errorEl.textContent = result.error;
+          errorEl.classList.remove('hidden');
+          createBtn.disabled = false;
+          createBtn.textContent = '创建账户';
+        }
+      } catch (err) {
+        console.error('Register error:', err);
+        errorEl.textContent = '注册失败，请稍后重试';
+        errorEl.classList.remove('hidden');
+        createBtn.disabled = false;
+        createBtn.textContent = '创建账户';
+      }
+    });
+
+    // 回车键支持
+    document.getElementById('username').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('nextBtn1').click();
+    });
+    document.getElementById('confirmPassword').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('nextBtn2').click();
+    });
+  </script>
+</body>
+</html>

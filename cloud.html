@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>云盘 - Rui Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .context-menu { position: fixed; z-index: 1000; min-width: 150px; }
+    .file-row.selected { background-color: #eff6ff !important; }
+    .file-row:hover { background-color: #f9fafb; }
+    .checkbox-col { width: 40px; }
+  </style>
+</head>
+<body class="min-h-screen bg-white text-gray-900 flex flex-col">
+  
+  <!-- 右上角Toast通知 -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <!-- 未登录提示 -->
+  <div id="loginRequired" class="hidden fixed inset-0 z-40 bg-white flex items-center justify-center">
+    <div class="text-center">
+      <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">请先登录</h2>
+      <p class="text-gray-500 mb-6">请先登录再使用云盘功能</p>
+      <button onclick="showLoginModal()" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">登录</button>
+    </div>
+  </div>
+
+  <!-- 右键菜单 -->
+  <div id="contextMenu" class="context-menu hidden bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden">
+    <button onclick="contextDownload()" class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+      下载
+    </button>
+    <button onclick="contextRename()" class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+      重命名
+    </button>
+    <button onclick="contextDelete()" class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+      删除
+    </button>
+  </div>
+
+  <!-- 主内容区 -->
+  <div id="mainContent">
+  <!-- 顶部导航栏 -->
+  <nav class="w-full px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <a href="index.html" class="text-xl font-semibold text-gray-900 hover:text-violet-600 transition-colors">Rui</a>
+        <div class="flex items-center gap-6 text-sm">
+          <a href="projects.html" class="text-gray-500 hover:text-gray-900 transition-colors">项目</a>
+          <a href="toolbox.html" class="text-gray-500 hover:text-gray-900 transition-colors">百宝箱</a>
+          <a href="download.html" class="text-gray-500 hover:text-gray-900 transition-colors">下载</a>
+          <a href="chat.html" class="text-gray-500 hover:text-gray-900 transition-colors">💬 聊天</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div id="authButtons">
+          <a href="register.html" class="px-4 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors">注册</a>
+          <button id="loginBtn" onclick="showLoginModal()" class="px-4 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors ml-2">登录</button>
+        </div>
+        <div id="userMenu" class="hidden relative">
+          <button id="userBtn" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+            <span id="userDisplayName" class="text-sm text-gray-700"></span>
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <div id="dropdown" class="hidden absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-lg border border-gray-100 py-1 overflow-hidden">
+            <a href="cloud.html" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors bg-gray-50">☁️ 云盘</a>
+            <a href="chat.html" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">💬 聊天</a>
+            <a href="profile.html" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">👤 我的</a>
+            <div class="border-t border-gray-100"></div>
+            <a href="javascript:void(0)" onclick="logout()" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">退出登录</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主内容 -->
+  <main class="flex-1 px-6 py-12">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+          <h2 class="text-2xl font-semibold text-gray-900">☁️ Rui云盘</h2>
+          <!-- 面包屑导航 -->
+          <div id="breadcrumb" class="flex items-center gap-1 text-sm text-gray-500"></div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="showCreateFolderModal()" class="px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">新建文件夹</button>
+          <button onclick="uploadFile()" class="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">上传文件</button>
+          <button onclick="loadFiles()" class="px-5 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors">刷新</button>
+        </div>
+      </div>
+      
+      <!-- 批量操作栏 -->
+      <div id="batchBar" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
+        <span class="text-sm text-blue-700">已选择 <span id="selectedCount">0</span> 个文件</span>
+        <div class="flex gap-2">
+          <button onclick="batchDownload()" class="px-3 py-1.5 bg-white text-gray-700 text-xs font-medium rounded-lg border hover:bg-gray-50">下载选中</button>
+          <button onclick="batchDelete()" class="px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-lg hover:bg-red-600">删除选中</button>
+          <button onclick="clearSelection()" class="px-3 py-1.5 bg-white text-gray-500 text-xs font-medium rounded-lg border hover:bg-gray-50">取消选择</button>
+        </div>
+      </div>
+      
+      <!-- 错误提示区域 -->
+      <div id="errorBox" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div class="flex-1">
+            <p id="errorTitle" class="text-sm font-medium text-red-800"></p>
+            <p id="errorMsg" class="text-xs text-red-600 mt-1"></p>
+          </div>
+          <button onclick="hideError()" class="text-red-400 hover:text-red-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+      </div>
+      
+      <div class="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-100 text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div class="checkbox-col flex items-center">
+            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4 rounded border-gray-300" />
+          </div>
+          <div class="col-span-6">文件名</div>
+          <div class="col-span-2">大小</div>
+          <div class="col-span-2">修改时间</div>
+          <div class="col-span-1">操作</div>
+        </div>
+        <div id="fileList" class="divide-y divide-gray-100"></div>
+        <div id="emptyState" class="px-6 py-12 text-center text-gray-400">
+          <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+          <p>暂无文件，点击上传按钮添加文件</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-400">
+      <span>© 2026 Rui Hub</span>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/RuiweihanHub" target="_blank" class="hover:text-gray-600 transition-colors">GitHub</a>
+      </div>
+    </div>
+  </footer>
+  </div>
+
+  <!-- 重命名弹窗 -->
+  <div id="renameModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 border-b border-gray-100">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">重命名</h2>
+          <button onclick="closeRenameModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">新名称</label>
+          <input id="newName" type="text" placeholder="输入新名称" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-300 focus:bg-white transition-colors" />
+        </div>
+        <button onclick="confirmRename()" class="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新建文件夹弹窗 -->
+  <div id="folderModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 border-b border-gray-100">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">新建文件夹</h2>
+          <button onclick="closeFolderModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">文件夹名称</label>
+          <input id="folderName" type="text" placeholder="输入文件夹名称" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-300 focus:bg-white transition-colors" />
+        </div>
+        <button onclick="createFolder()" class="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event)" />
+
+  <!-- 登录弹窗 -->
+  <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 border-b border-gray-100">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">登录</h2>
+          <button onclick="closeLoginModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+      </div>
+      <form id="authForm" class="p-6 space-y-4" onsubmit="handleLogin(event)">
+        <div id="loginError" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"></div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">用户名</label>
+          <input id="loginUsername" type="text" placeholder="请输入用户名" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-300 focus:bg-white transition-colors" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">密码</label>
+          <input id="loginPassword" type="password" placeholder="请输入密码" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-300 focus:bg-white transition-colors" required />
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500" />
+          <label for="rememberMe" class="text-sm text-gray-600">保持登录（7天）</label>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors">登录</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 文件预览模态框 -->
+  <div id="previewModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 id="previewTitle" class="text-lg font-semibold text-gray-900">文件预览</h3>
+        <button onclick="closePreview()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+      </div>
+      <div id="previewContent" class="flex-1 overflow-auto p-4"></div>
+    </div>
+  </div>
+
+  <!-- 引入用户管理系统 -->
+  <script src="auth.js"></script>
+  <script>
+    // 本地备用用户验证（包含UID）
+    const LOCAL_USERS_DATA = { 
+      'Xvjiarui': { hash: 'o7dyuk', uid: '000002' }, 
+      'Ruiweihan': { hash: '6052ni', uid: '000001' }, 
+      'Administrator': { hash: '1u98e9', uid: 'Administrator' }
+    };
+    const ADMINS = ['Administrator', 'Ruiweihan', '000001'];
+    function hashPassword(p) { let h=0; for(let i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h=h&h;} return Math.abs(h).toString(36); }
+    
+    function showLoginModal() {
+      document.getElementById('loginModal').classList.remove('hidden');
+      document.getElementById('loginModal').classList.add('flex');
+      document.getElementById('loginError').classList.add('hidden');
+    }
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('loginModal').classList.remove('flex');
+    }
+    
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const remember = document.getElementById('rememberMe').checked;
+      
+      // 先尝试本地验证
+      if (LOCAL_USERS_DATA[username] && LOCAL_USERS_DATA[username].hash === hashPassword(password)) {
+        const uid = LOCAL_USERS_DATA[username].uid;
+        sessionStorage.setItem('rui_user', username);
+        sessionStorage.setItem('rui_uid', uid);
+        if (remember) {
+          localStorage.setItem('rui_user_remember', username);
+          localStorage.setItem('rui_uid_remember', uid);
+          localStorage.setItem('rui_user_expire', (Date.now() + 7 * 24 * 60 * 60 * 1000).toString());
+        }
+        closeLoginModal();
+        showToast('登录成功');
+        setTimeout(() => location.reload(), 500);
+        return;
+      }
+      
+      // 尝试远程验证
+      try {
+        const auth = await getAuth();
+        const result = await auth.validateUser(username, password);
+        if (result.success) {
+          sessionStorage.setItem('rui_user', result.user.username);
+          sessionStorage.setItem('rui_uid', result.user.uid);
+          if (remember) {
+            localStorage.setItem('rui_user_remember', result.user.username);
+            localStorage.setItem('rui_uid_remember', result.user.uid);
+            localStorage.setItem('rui_user_expire', (Date.now() + 7 * 24 * 60 * 60 * 1000).toString());
+          }
+          closeLoginModal();
+          showToast('登录成功');
+          setTimeout(() => location.reload(), 500);
+        } else {
+          document.getElementById('loginError').textContent = result.error;
+          document.getElementById('loginError').classList.remove('hidden');
+        }
+      } catch (err) {
+        document.getElementById('loginError').textContent = '用户名或密码错误';
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+    
+    // 配置
+    const GITHUB_REPO = 'RuiweihanHub/ruicloud';
+    const getToken = () => ['ghp_', 'aJxbQaU0S56e8pl6N8zrkWoHkfJHi92GOiFQ'].join('');
+    
+    let currentPath = '';
+    let currentUser = '';
+    let allFiles = [];
+    let selectedFiles = new Set();
+    let contextItem = null;
+
+    // 文件类型判断
+    const TEXT_EXTENSIONS = ['txt', 'md', 'json', 'js', 'ts', 'html', 'css', 'xml', 'yaml', 'yml', 'ini', 'conf', 'log', 'csv', 'sql', 'py', 'java', 'c', 'cpp', 'h', 'sh', 'bat'];
+    const PDF_EXTENSIONS = ['pdf'];
+    const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+    const OFFICE_EXTENSIONS = {
+      'doc': 'word', 'docx': 'word',
+      'xls': 'excel', 'xlsx': 'excel',
+      'ppt': 'powerpoint', 'pptx': 'powerpoint'
+    };
+
+    function getFileExtension(filename) {
+      return filename.split('.').pop().toLowerCase();
+    }
+
+    function isTextFile(filename) {
+      return TEXT_EXTENSIONS.includes(getFileExtension(filename));
+    }
+
+    function isPDF(filename) {
+      return PDF_EXTENSIONS.includes(getFileExtension(filename));
+    }
+
+    function isImage(filename) {
+      return IMAGE_EXTENSIONS.includes(getFileExtension(filename));
+    }
+
+    function isOfficeFile(filename) {
+      return OFFICE_EXTENSIONS.hasOwnProperty(getFileExtension(filename));
+    }
+
+    // Toast通知
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-gray-700';
+      const icon = type === 'success' 
+        ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>'
+        : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>';
+      
+      toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium`;
+      toast.innerHTML = `${icon}<span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // 错误提示
+    function showError(title, msg) {
+      document.getElementById('errorTitle').textContent = title;
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('errorBox').classList.remove('hidden');
+    }
+    function hideError() { document.getElementById('errorBox').classList.add('hidden'); }
+
+    const loginBtn = document.getElementById("loginBtn");
+    const authButtons = document.getElementById("authButtons");
+    const userMenu = document.getElementById('userMenu');
+    const userBtn = document.getElementById('userBtn');
+    const dropdown = document.getElementById('dropdown');
+    const userDisplayName = document.getElementById('userDisplayName');
+
+    // 检查登录状态 - 使用统一的登录状态检查
+    function checkLogin() {
+      // 使用 auth.js 中的统一登录状态同步函数
+      const loginState = syncLoginState();
+      
+      if (!loginState.isLoggedIn) {
+        // 未登录，显示登录提示
+        document.getElementById('loginRequired').classList.remove('hidden');
+        document.getElementById('mainContent').classList.add('opacity-0');
+        authButtons.classList.remove("hidden");
+        return false;
+      }
+      
+      // 已登录
+      document.getElementById('loginRequired').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('opacity-0');
+      authButtons.classList.add("hidden");
+      userMenu.classList.remove('hidden');
+      userDisplayName.textContent = loginState.username;
+      currentUser = loginState.username;
+      loadFiles();
+      return true;
+    }
+    checkLogin();
+
+    userBtn.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('hidden'); });
+    document.addEventListener('click', () => { dropdown.classList.add('hidden'); });
+
+    function logout() { 
+      sessionStorage.removeItem('rui_user'); 
+      sessionStorage.removeItem('rui_uid');
+      localStorage.removeItem('rui_user_remember'); 
+      localStorage.removeItem('rui_uid_remember');
+      localStorage.removeItem('rui_user_expire'); 
+      location.reload(); 
+    }
+
+    // 隐藏右键菜单
+    document.addEventListener('click', () => {
+      document.getElementById('contextMenu').classList.add('hidden');
+    });
+
+    // 更新面包屑导航
+    function updateBreadcrumb() {
+      const breadcrumb = document.getElementById('breadcrumb');
+      if (!currentPath) {
+        breadcrumb.innerHTML = '';
+        return;
+      }
+      
+      const parts = currentPath.split('/').filter(p => p);
+      let html = `<button onclick="goToPath(-1)" class="hover:text-gray-900">根目录</button>`;
+      
+      parts.forEach((part, index) => {
+        html += `<span class="text-gray-300">/</span>`;
+        if (index === parts.length - 1) {
+          html += `<span class="text-gray-900 font-medium">${part}</span>`;
+        } else {
+          html += `<button onclick="goToPath(${index})" class="hover:text-gray-900">${part}</button>`;
+        }
+      });
+      
+      breadcrumb.innerHTML = html;
+    }
+
+    // 跳转到指定路径
+    function goToPath(index) {
+      if (index === -1) {
+        currentPath = '';
+      } else {
+        const parts = currentPath.split('/').filter(p => p);
+        currentPath = parts.slice(0, index + 1).join('/') + '/';
+      }
+      loadFiles();
+    }
+
+    // 显示右键菜单
+    function showContextMenu(e, item) {
+      e.preventDefault();
+      e.stopPropagation();
+      contextItem = item;
+      const menu = document.getElementById('contextMenu');
+      menu.style.left = e.pageX + 'px';
+      menu.style.top = e.pageY + 'px';
+      menu.classList.remove('hidden');
+    }
+
+    // 右键菜单操作
+    function contextDownload() {
+      if (contextItem && !contextItem.isFolder) {
+        downloadFile(contextItem.path, contextItem.name);
+      }
+    }
+
+    function contextRename() {
+      if (contextItem) {
+        document.getElementById('newName').value = contextItem.name;
+        document.getElementById('renameModal').classList.remove('hidden');
+        document.getElementById('renameModal').classList.add('flex');
+      }
+    }
+
+    async function confirmRename() {
+      const newName = document.getElementById('newName').value.trim();
+      if (!newName || !contextItem) return;
+      
+      if (newName === contextItem.name) {
+        closeRenameModal();
+        return;
+      }
+
+      const token = getToken();
+      const oldPath = contextItem.path;
+      const newPath = `users/${currentUser}/${currentPath}${newName}`;
+
+      try {
+        const getRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${oldPath}`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (!getRes.ok) {
+          showError('获取文件失败', '无法读取原文件');
+          return;
+        }
+        
+        const fileData = await getRes.json();
+        
+        const createRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${newPath}`, {
+          method: 'PUT',
+          headers: { 
+            'Authorization': `token ${token}`, 
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Rename ${contextItem.name} to ${newName}`,
+            content: fileData.content
+          })
+        });
+        
+        if (!createRes.ok) {
+          showError('重命名失败', '创建新文件失败');
+          return;
+        }
+        
+        await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${oldPath}`, {
+          method: 'DELETE',
+          headers: { 
+            'Authorization': `token ${token}`, 
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Delete old file ${contextItem.name}`,
+            sha: fileData.sha
+          })
+        });
+        
+        closeRenameModal();
+        showToast('重命名成功');
+        loadFiles();
+      } catch (err) {
+        showError('重命名失败', err.message);
+      }
+    }
+
+    function closeRenameModal() {
+      document.getElementById('renameModal').classList.add('hidden');
+      document.getElementById('renameModal').classList.remove('flex');
+    }
+
+    function contextDelete() {
+      if (contextItem) {
+        deleteItem(contextItem.name, contextItem.sha, contextItem.isFolder);
+      }
+    }
+
+    // 双击文件处理 - 修复版本
+    function handleFileDoubleClick(item) {
+      if (item.isFolder) {
+        enterFolder(item.name);
+        return;
+      }
+
+      const ext = getFileExtension(item.name);
+      
+      // PDF - 新标签页打开
+      if (isPDF(item.name)) {
+        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${item.path}`;
+        window.open(rawUrl, '_blank');
+        return;
+      }
+
+      // 图片 - 在模态框显示
+      if (isImage(item.name)) {
+        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${item.path}`;
+        showImagePreview(item.name, rawUrl);
+        return;
+      }
+
+      // Office文件 - 使用Office Online查看器
+      if (isOfficeFile(item.name)) {
+        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${item.path}`;
+        const officeUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(rawUrl)}`;
+        window.open(officeUrl, '_blank');
+        return;
+      }
+
+      // 文本文件 - 在线预览
+      if (isTextFile(item.name)) {
+        showTextPreview(item);
+        return;
+      }
+
+      // 其他文件 - 直接下载
+      downloadFile(item.path, item.name);
+    }
+
+    async function showTextPreview(item) {
+      document.getElementById('previewTitle').textContent = item.name;
+      document.getElementById('previewContent').innerHTML = '<div class="flex items-center justify-center py-8"><div class="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full"></div></div>';
+      document.getElementById('previewModal').classList.remove('hidden');
+      document.getElementById('previewModal').classList.add('flex');
+
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/main/${item.path}`);
+        const text = await res.text();
+        document.getElementById('previewContent').innerHTML = `<pre class="bg-gray-50 p-4 rounded-xl text-sm overflow-auto max-h-[70vh] whitespace-pre-wrap break-all">${escapeHtml(text)}</pre>`;
+      } catch (err) {
+        document.getElementById('previewContent').innerHTML = '<p class="text-red-500">加载失败</p>';
+      }
+    }
+
+    function showImagePreview(name, url) {
+      document.getElementById('previewTitle').textContent = name;
+      document.getElementById('previewContent').innerHTML = `<img src="${url}" alt="${name}" class="max-w-full max-h-[70vh] mx-auto" />`;
+      document.getElementById('previewModal').classList.remove('hidden');
+      document.getElementById('previewModal').classList.add('flex');
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.add('hidden');
+      document.getElementById('previewModal').classList.remove('flex');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 复选框功能
+    function toggleSelectAll() {
+      const selectAll = document.getElementById('selectAll');
+      const checkboxes = document.querySelectorAll('.file-checkbox');
+      
+      if (selectAll.checked) {
+        checkboxes.forEach(cb => {
+          cb.checked = true;
+          selectedFiles.add(cb.dataset.path);
+          cb.closest('.file-row').classList.add('selected');
+        });
+      } else {
+        checkboxes.forEach(cb => {
+          cb.checked = false;
+          selectedFiles.delete(cb.dataset.path);
+          cb.closest('.file-row').classList.remove('selected');
+        });
+      }
+      updateBatchBar();
+    }
+
+    function toggleFileSelect(checkbox) {
+      const path = checkbox.dataset.path;
+      if (checkbox.checked) {
+        selectedFiles.add(path);
+        checkbox.closest('.file-row').classList.add('selected');
+      } else {
+        selectedFiles.delete(path);
+        checkbox.closest('.file-row').classList.remove('selected');
+      }
+      updateBatchBar();
+    }
+
+    function updateBatchBar() {
+      const count = selectedFiles.size;
+      document.getElementById('selectedCount').textContent = count;
+      document.getElementById('batchBar').classList.toggle('hidden', count === 0);
+    }
+
+    function clearSelection() {
+      selectedFiles.clear();
+      document.querySelectorAll('.file-checkbox').forEach(cb => {
+        cb.checked = false;
+        cb.closest('.file-row').classList.remove('selected');
+      });
+      document.getElementById('selectAll').checked = false;
+      updateBatchBar();
+    }
+
+    async function batchDelete() {
+      if (selectedFiles.size === 0) return;
+      if (!confirm(`确定要删除选中的 ${selectedFiles.size} 个文件吗？`)) return;
+
+      const token = getToken();
+      let success = 0;
+      
+      for (const path of selectedFiles) {
+        try {
+          const file = allFiles.find(f => f.path === path);
+          if (file && !file.isFolder) {
+            const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`, {
+              method: 'DELETE',
+              headers: { 
+                'Authorization': `token ${token}`, 
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ message: `Delete ${file.name}`, sha: file.sha })
+            });
+            if (res.ok) success++;
+          }
+        } catch (e) {}
+      }
+      
+      showToast(`成功删除 ${success} 个文件`);
+      clearSelection();
+      loadFiles();
+    }
+
+    function batchDownload() {
+      if (selectedFiles.size === 0) return;
+      
+      for (const path of selectedFiles) {
+        const file = allFiles.find(f => f.path === path);
+        if (file && !file.isFolder) {
+          const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${path}`;
+          window.open(rawUrl, '_blank');
+        }
+      }
+    }
+
+    function showCreateFolderModal() {
+      document.getElementById('folderModal').classList.remove('hidden');
+      document.getElementById('folderModal').classList.add('flex');
+      document.getElementById('folderName').value = '';
+    }
+    function closeFolderModal() { 
+      document.getElementById('folderModal').classList.add('hidden'); 
+      document.getElementById('folderModal').classList.remove('flex'); 
+    }
+
+    async function createFolder() {
+      const folderName = document.getElementById('folderName').value.trim();
+      if (!folderName) { showToast('请输入文件夹名称', 'error'); return; }
+      
+      const path = `users/${currentUser}/${currentPath}${folderName}/.gitkeep`;
+      const content = btoa('');
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`, {
+          method: 'PUT',
+          headers: { 
+            'Authorization': `token ${token}`, 
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ message: `Create folder: ${folderName}`, content })
+        });
+        
+        if (res.ok) { 
+          showToast('文件夹创建成功');
+          closeFolderModal();
+          loadFiles(); 
+        } else { 
+          const data = await res.json();
+          showError('创建文件夹失败', data.message || '未知错误');
+        }
+      } catch (err) {
+        showError('创建文件夹失败', err.message);
+      }
+    }
+
+    function uploadFile() {
+      hideError();
+      document.getElementById('fileInput').click();
+    }
+
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const token = getToken();
+      const path = `users/${currentUser}/${currentPath}${file.name}`;
+      
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const bytes = new Uint8Array(reader.result);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+            resolve(btoa(binary));
+          };
+          reader.onerror = () => reject(new Error('文件读取失败'));
+          reader.readAsArrayBuffer(file);
+        });
+        
+        let sha = null;
+        try {
+          const checkRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+          });
+          if (checkRes.ok) {
+            const existingFile = await checkRes.json();
+            sha = existingFile.sha;
+          }
+        } catch (e) {}
+        
+        const body = { message: `Upload ${file.name}`, content: base64 };
+        if (sha) body.sha = sha;
+        
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`, {
+          method: 'PUT',
+          headers: { 
+            'Authorization': `token ${token}`, 
+            'Accept': 'application/vnd.github.v3+json', 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(body)
+        });
+        
+        if (res.ok) { 
+          showToast('上传成功');
+          loadFiles();
+        }
+        else { 
+          const data = await res.json();
+          showError('上传失败', data.message || JSON.stringify(data));
+        }
+      } catch (err) { 
+        showError('上传失败', err.message);
+      }
+      
+      event.target.value = '';
+    }
+
+    async function loadFiles() {
+      if (!currentUser) return;
+      
+      const token = getToken();
+      const basePath = `users/${currentUser}`;
+      const fullPath = currentPath ? `${basePath}/${currentPath}` : basePath;
+      
+      updateBreadcrumb();
+      document.getElementById('fileList').innerHTML = '';
+      document.getElementById('emptyState').classList.add('hidden');
+      clearSelection();
+      
+      try {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${fullPath}?ref=main&_=${Date.now()}`;
+        
+        const res = await fetch(url, {
+          headers: { 
+            'Authorization': `token ${token}`, 
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (res.ok) {
+          const files = await res.json();
+          
+          if (files && files.length > 0) {
+            let items = files.filter(f => f.name !== '.gitkeep');
+            
+            // 添加返回上级目录选项
+            if (currentPath) {
+              items.unshift({
+                name: '..',
+                path: 'parent',
+                type: 'dir',
+                isParent: true
+              });
+            }
+            
+            const folders = items.filter(f => f.type === 'dir');
+            const regularFiles = items.filter(f => f.type === 'file');
+            const sortedItems = [...folders, ...regularFiles];
+            allFiles = sortedItems.filter(f => !f.isParent).map(item => ({
+              name: item.name,
+              path: item.path,
+              sha: item.sha,
+              size: item.size,
+              isFolder: item.type === 'dir'
+            }));
+            
+            if (sortedItems.length > 0) {
+              document.getElementById('emptyState').classList.add('hidden');
+              document.getElementById('fileList').innerHTML = sortedItems.map(item => {
+                const isFolder = item.type === 'dir';
+                const isParent = item.isParent;
+                
+                return `<div class="file-row grid grid-cols-12 gap-4 px-6 py-3 items-center transition-colors cursor-pointer" 
+                  data-path="${item.path}" 
+                  data-isparent="${isParent}"
+                  oncontextmenu="event.preventDefault();"
+                  ondblclick="event.stopPropagation(); ${isParent ? 'goToPath(-1)' : `handleFileDoubleClick({name: '${item.name}', path: '${item.path}', sha: '${item.sha}', isFolder: ${isFolder}})`}">
+                  <div class="checkbox-col flex items-center">
+                    ${!isParent ? `<input type="checkbox" class="file-checkbox w-4 h-4 rounded border-gray-300" data-path="${item.path}" onchange="toggleFileSelect(this)" onclick="event.stopPropagation()" />` : ''}
+                  </div>
+                  <div class="col-span-6 flex items-center gap-3">
+                    ${isParent 
+                      ? '<svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>'
+                      : isFolder 
+                        ? '<svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>'
+                        : '<svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>'}
+                    <span class="text-sm ${isParent ? 'text-blue-600 hover:underline' : 'text-gray-700'} truncate">${isParent ? '返回上级目录' : item.name}</span>
+                  </div>
+                  <div class="col-span-2 text-sm text-gray-500">${isParent || isFolder ? '-' : formatSize(item.size)}</div>
+                  <div class="col-span-2 text-sm text-gray-500">-</div>
+                  <div class="col-span-1">
+                    ${!isParent && !isFolder ? `<button onclick="event.stopPropagation(); downloadFile('${item.path}', '${item.name}')" class="text-gray-400 hover:text-blue-500 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg></button>` : ''}
+                  </div>
+                </div>`;
+              }).join('');
+            } else { 
+              document.getElementById('emptyState').classList.remove('hidden');
+            }
+          } else { 
+            // 空目录但需要显示返回上级
+            if (currentPath) {
+              document.getElementById('fileList').innerHTML = `<div class="file-row grid grid-cols-12 gap-4 px-6 py-3 items-center transition-colors cursor-pointer hover:bg-gray-50" ondblclick="goToPath(-1)">
+                <div class="checkbox-col"></div>
+                <div class="col-span-6 flex items-center gap-3">
+                  <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                  <span class="text-sm text-blue-600 hover:underline">返回上级目录</span>
+                </div>
+                <div class="col-span-2 text-sm text-gray-500">-</div>
+                <div class="col-span-2 text-sm text-gray-500">-</div>
+                <div class="col-span-1"></div>
+              </div>`;
+            } else {
+              document.getElementById('emptyState').classList.remove('hidden');
+            }
+          }
+        } else if (res.status === 404) {
+          if (currentPath) {
+            document.getElementById('fileList').innerHTML = `<div class="file-row grid grid-cols-12 gap-4 px-6 py-3 items-center transition-colors cursor-pointer hover:bg-gray-50" ondblclick="goToPath(-1)">
+              <div class="checkbox-col"></div>
+              <div class="col-span-6 flex items-center gap-3">
+                <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                <span class="text-sm text-blue-600 hover:underline">返回上级目录</span>
+              </div>
+              <div class="col-span-2 text-sm text-gray-500">-</div>
+              <div class="col-span-2 text-sm text-gray-500">-</div>
+              <div class="col-span-1"></div>
+            </div>`;
+          } else {
+            document.getElementById('emptyState').classList.remove('hidden');
+          }
+        } else {
+          document.getElementById('emptyState').classList.remove('hidden');
+        }
+      } catch (err) { 
+        document.getElementById('emptyState').classList.remove('hidden');
+      }
+    }
+    
+    function enterFolder(folderName) {
+      currentPath += folderName + '/';
+      loadFiles();
+    }
+    
+    async function downloadFile(path, filename) {
+      const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${path}`;
+      window.open(rawUrl, '_blank');
+    }
+    
+    async function deleteItem(name, sha, isFolder) {
+      if (!confirm(isFolder ? `确定要删除文件夹 "${name}" 吗？` : `确定要删除 "${name}" 吗？`)) return;
+      const token = getToken();
+      const basePath = `users/${currentUser}/${currentPath}`;
+      hideError();
+      
+      try {
+        if (isFolder) {
+          const folderPath = `${basePath}${name}`;
+          const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${folderPath}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+          });
+          if (res.ok) {
+            const contents = await res.json();
+            for (const item of contents) {
+              await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${item.path}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Delete ${item.name}`, sha: item.sha })
+              });
+            }
+            showToast('删除成功');
+            loadFiles();
+          }
+        } else {
+          const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${basePath}${name}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: `Delete ${name}`, sha })
+          });
+          if (res.ok) { 
+            showToast('删除成功');
+            loadFiles(); 
+          }
+          else { 
+            const data = await res.json();
+            showError('删除失败', data.message || '未知错误');
+          }
+        }
+      } catch (err) { 
+        showError('删除失败', err.message);
+      }
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rui Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    @keyframes thinking-pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+    .thinking-dot { animation: thinking-pulse 1.4s ease-in-out infinite; }
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .markdown-content h1 { font-size: 1.3em; font-weight: 700; margin: 0.5em 0; }
+    .markdown-content h2 { font-size: 1.2em; font-weight: 600; margin: 0.5em 0; }
+    .markdown-content p { margin: 0.4em 0; line-height: 1.6; }
+    .markdown-content ul, .markdown-content ol { margin: 0.4em 0; padding-left: 1.5em; }
+    .markdown-content code { background: rgba(0,0,0,0.05); padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
+    .markdown-content pre { background: #1e293b; color: #e2e8f0; padding: 1em; border-radius: 8px; overflow-x: auto; margin: 0.5em 0; }
+    .markdown-content pre code { background: none; padding: 0; color: inherit; }
+    .ai-panel { transition: all 0.3s ease; }
+    .ai-message { animation: messageIn 0.3s ease-out; }
+    @keyframes messageIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-white text-gray-900 flex flex-col">
+  
+  <!-- 顶部导航栏 -->
+  <nav class="w-full px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <a href="index.html" class="text-xl font-semibold text-gray-900 hover:text-violet-600 transition-colors">Rui</a>
+        <div class="flex items-center gap-6 text-sm">
+          <a href="projects.html" class="text-gray-500 hover:text-gray-900 transition-colors">项目</a>
+          <a href="toolbox.html" class="text-gray-500 hover:text-gray-900 transition-colors">百宝箱</a>
+          <a href="download.html" class="text-gray-500 hover:text-gray-900 transition-colors">下载</a>
+          <a href="chat.html" class="text-gray-500 hover:text-gray-900 transition-colors">💬 聊天</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div id="authButtons">
+          <a href="register.html" class="px-4 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors">注册</a>
+          <button id="loginBtn" class="px-4 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors ml-2">登录</button>
+        </div>
+        <div id="userMenu" class="hidden relative">
+          <button id="userBtn" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+            <span id="userDisplayName" class="text-sm text-gray-700"></span>
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <div id="dropdown" class="hidden absolute right-0 top-full mt-2 w-36 bg-white rounded-xl shadow-lg border border-gray-100 py-1 overflow-hidden">
+            <a href="cloud.html" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">☁️ 云盘</a>
+            <a href="chat.html" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">💬 聊天</a>
+            <a href="profile.html" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">👤 我的</a>
+            <a id="adminLink" href="admin.html" class="hidden flex items-center gap-2 px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors">🛡️ 管理面板</a>
+            <div class="border-t border-gray-100"></div>
+            <a href="javascript:void(0)" onclick="logout()" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">退出登录</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 公告栏 -->
+  <div class="w-full px-6 py-2">
+    <div class="max-w-6xl mx-auto flex items-center justify-center">
+      <a href="javascript:void(0)" class="inline-flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 transition-colors">
+        <span>🚀</span>
+        <span>Wei语言公布最新Aurora版本，提升性能超300倍！</span>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <main class="flex-1 flex flex-col items-center justify-center px-6 py-12">
+    <div class="text-center mb-8">
+      <h1 class="text-5xl font-medium tracking-tight text-gray-900">Rui</h1>
+    </div>
+
+    <div class="w-full max-w-2xl mb-10">
+      <div class="relative group">
+        <div class="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-purple-500/10 rounded-2xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative flex items-center bg-gray-50 border border-gray-200 rounded-2xl overflow-visible focus-within:border-gray-300 focus-within:bg-white transition-all duration-300 shadow-sm">
+          <svg class="w-5 h-5 text-gray-400 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input id="searchInput" type="text" placeholder="搜索项目..." class="flex-1 bg-transparent px-4 py-4 text-sm text-gray-900 placeholder-gray-400 outline-none" />
+          <div class="relative mr-2">
+            <button type="button" id="searchTypeBtn" onclick="toggleSearchMenu()" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+              <span id="searchTypeText">项目</span>
+              <svg id="searchArrow" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div id="searchTypeDropdown" class="hidden absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-[9999]">
+              <div onclick="setSearchType('project')" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 cursor-pointer">
+                <span>📁</span><span>项目</span>
+              </div>
+              <div onclick="setSearchType('glm')" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 cursor-pointer">
+                <span>🤖</span><span>GLM AI</span>
+              </div>
+              <div onclick="setSearchType('github')" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 cursor-pointer">
+                <span>💻</span><span>GitHub</span>
+              </div>
+              <div onclick="setSearchType('bing')" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 cursor-pointer">
+                <span>🔍</span><span>Bing</span>
+              </div>
+              <div onclick="setSearchType('bilibili')" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 cursor-pointer">
+                <span>📺</span><span>Bilibili</span>
+              </div>
+              <div onclick="setSearchType('rcmd')" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 cursor-pointer">
+                <span>⚡</span><span>rCMD</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="handleSearch()" class="mr-3 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors">搜索</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLM AI 面板 -->
+    <div id="aiPanel" class="hidden w-full max-w-2xl mb-10 ai-panel">
+      <div class="bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden">
+        <!-- AI 面板头部 -->
+        <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-500 to-purple-500 text-white">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🤖</span>
+            <span class="font-medium">GLM AI 助手</span>
+          </div>
+          <button onclick="closeAIPanel()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <!-- AI 消息区域 -->
+        <div id="aiMessages" class="h-80 overflow-y-auto p-4 space-y-4">
+          <div class="ai-message flex gap-3">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center text-white text-sm flex-shrink-0">🤖</div>
+            <div class="flex-1 bg-white rounded-xl p-3 text-sm text-gray-700 border border-gray-100">
+              <p>你好！我是 GLM AI 助手，有什么我可以帮助你的吗？</p>
+            </div>
+          </div>
+        </div>
+        <!-- AI 输入区域 -->
+        <div class="p-3 border-t border-gray-200 bg-white">
+          <div class="flex gap-2">
+            <input id="aiInput" type="text" placeholder="输入你的问题..." class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-violet-300 transition-colors" />
+            <button onclick="sendAIMessage()" id="aiSendBtn" class="px-4 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-colors">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 四个快捷入口 -->
+    <div class="w-full max-w-2xl">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <a href="projects.html" class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 group">
+          <span class="text-2xl mb-2">📁</span>
+          <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">项目</span>
+        </a>
+        <a href="toolbox.html" class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 group">
+          <span class="text-2xl mb-2">📦</span>
+          <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">百宝箱</span>
+        </a>
+        <a href="cloud.html" class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 group">
+          <span class="text-2xl mb-2">☁️</span>
+          <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">云盘</span>
+        </a>
+        <a href="chat.html" class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 group">
+          <span class="text-2xl mb-2">💬</span>
+          <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">聊天</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-400">
+      <span>© 2026 Rui Hub</span>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/RuiweihanHub" target="_blank" class="hover:text-gray-600 transition-colors">GitHub</a>
+        <a href="javascript:void(0)" class="hover:text-gray-600 transition-colors">Twitter</a>
+        <a href="javascript:void(0)" class="hover:text-gray-600 transition-colors">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 登录弹窗 -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 border-b border-gray-100">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">登录</h2>
+          <button id="closeBtn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        </div>
+      </div>
+      <form id="authForm" class="p-6 space-y-4">
+        <div id="errorMsg" class="hidden p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600"></div>
+        <div id="successMsg" class="hidden p-3 bg-green-50 border border-green-100 rounded-lg text-sm text-green-600"></div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">用户名</label>
+          <input id="username" type="text" placeholder="请输入用户名" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-300 focus:bg-white transition-colors" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">密码</label>
+          <input id="password" type="password" placeholder="请输入密码" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-300 focus:bg-white transition-colors" required />
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500" />
+          <label for="rememberMe" class="text-sm text-gray-600">保持登录（7天）</label>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 disabled:opacity-50 transition-colors">登录</button>
+        <div class="text-center text-sm text-gray-500">
+          没有账号？<a href="register.html" class="text-violet-600 hover:text-violet-700 font-medium">立即注册</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 引入用户管理系统 -->
+  <script src="auth.js"></script>
+  
+  <script>
+    // 使用 auth.js 中定义的 LOCAL_USERS 和 hashPasswordSync
+    // 默认密码: Xvjiarui=xvj123, Ruiweihan=rui123, Administrator=admin123
+    const LOCAL_USERS_DATA = { 
+      'Xvjiarui': { hash: 'o7dyuk', uid: '000002' }, 
+      'Ruiweihan': { hash: '6052ni', uid: '000001' }, 
+      'Administrator': { hash: '1u98e9', uid: 'Administrator' }
+    };
+
+    const modal = document.getElementById('modal');
+    const loginBtn = document.getElementById('loginBtn');
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    const userBtn = document.getElementById('userBtn');
+    const dropdown = document.getElementById('dropdown');
+    const closeBtn = document.getElementById('closeBtn');
+    const authForm = document.getElementById('authForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+
+    function checkLogin() {
+      const sessionUser = sessionStorage.getItem('rui_user');
+      const sessionUid = sessionStorage.getItem('rui_uid');
+      const rememberedUser = localStorage.getItem('rui_user_remember');
+      const rememberedUid = localStorage.getItem('rui_uid_remember');
+      if (sessionUser && sessionUid) showLoggedInState(sessionUser);
+      else if (rememberedUser && rememberedUid) {
+        const expireTime = localStorage.getItem('rui_user_expire');
+        if (expireTime && Date.now() < parseInt(expireTime)) { 
+          sessionStorage.setItem('rui_user', rememberedUser); 
+          sessionStorage.setItem('rui_uid', rememberedUid);
+          showLoggedInState(rememberedUser); 
+        }
+        else { localStorage.removeItem('rui_user_remember'); localStorage.removeItem('rui_user_expire'); }
+      }
+    }
+    checkLogin();
+
+    function showLoggedInState(username) {
+      authButtons.classList.add('hidden');
+      userMenu.classList.remove('hidden');
+      document.getElementById('userDisplayName').textContent = username;
+      
+      // 检查是否是管理员
+      const admins = ['Administrator', 'Ruiweihan', '000001'];
+      const uid = sessionStorage.getItem('rui_uid');
+      if (admins.includes(username) || admins.includes(uid)) {
+        document.getElementById('adminLink').classList.remove('hidden');
+        document.getElementById('adminLink').classList.add('flex');
+      }
+    }
+
+    loginBtn.addEventListener('click', () => { modal.classList.remove('hidden'); modal.classList.add('flex'); });
+    closeBtn.addEventListener('click', () => { modal.classList.add('hidden'); modal.classList.remove('flex'); errorMsg.classList.add('hidden'); });
+    userBtn.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('hidden'); });
+    document.addEventListener('click', () => { dropdown.classList.add('hidden'); });
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+      if (!username || !password) { showError('用户名和密码不能为空'); return; }
+      
+      // 先尝试本地验证（快速响应）
+      // 简化版哈希函数（兼容旧密码）
+      const simpleHash = (p) => {
+        let hash = 0;
+        for (let i = 0; i < p.length; i++) {
+          hash = ((hash << 5) - hash) + p.charCodeAt(i);
+          hash = hash & hash;
+        }
+        return Math.abs(hash).toString(36);
+      };
+      
+      const userEntry = LOCAL_USERS_DATA[username];
+      if (userEntry && userEntry.hash === simpleHash(password)) {
+        const uid = userEntry.uid;
+        sessionStorage.setItem('rui_user', username);
+        sessionStorage.setItem('rui_uid', uid);
+        // 始终存储到 localStorage 以便跨页面同步
+        localStorage.setItem('rui_user_remember', username);
+        localStorage.setItem('rui_uid_remember', uid);
+        if (rememberMe) { 
+          // 记住登录：7天过期
+          localStorage.setItem('rui_user_expire', (Date.now() + 7 * 24 * 60 * 60 * 1000).toString()); 
+        } else {
+          // 不记住：1小时过期（浏览器关闭后需要重新登录）
+          localStorage.setItem('rui_user_expire', (Date.now() + 1 * 60 * 60 * 1000).toString());
+        }
+        showSuccess('登录成功！');
+        setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); showLoggedInState(username); }, 500);
+        return;
+      }
+      
+      // 尝试远程验证（新注册的用户）
+      try {
+        const auth = await getAuth();
+        const result = await auth.validateUser(username, password);
+        if (result.success) {
+          sessionStorage.setItem('rui_user', result.user.username);
+          sessionStorage.setItem('rui_uid', result.user.uid);
+          // 始终存储到 localStorage 以便跨页面同步
+          localStorage.setItem('rui_user_remember', result.user.username);
+          localStorage.setItem('rui_uid_remember', result.user.uid);
+          if (rememberMe) { 
+            // 记住登录：7天过期
+            localStorage.setItem('rui_user_expire', (Date.now() + 7 * 24 * 60 * 60 * 1000).toString()); 
+          } else {
+            // 不记住：1小时过期
+            localStorage.setItem('rui_user_expire', (Date.now() + 1 * 60 * 60 * 1000).toString());
+          }
+          showSuccess('登录成功！');
+          setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); showLoggedInState(result.user.username); }, 500);
+        } else {
+          showError(result.error);
+        }
+      } catch (err) {
+        showError('登录失败，请重试');
+      }
+    });
+
+    function logout() { 
+      sessionStorage.removeItem('rui_user'); 
+      sessionStorage.removeItem('rui_uid');
+      localStorage.removeItem('rui_user_remember'); 
+      localStorage.removeItem('rui_uid_remember');
+      localStorage.removeItem('rui_user_expire'); 
+      location.reload(); 
+    }
+    function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.remove('hidden'); successMsg.classList.add('hidden'); }
+    function showSuccess(msg) { successMsg.textContent = msg; successMsg.classList.remove('hidden'); errorMsg.classList.add('hidden'); }
+
+    // 搜索类型切换
+    let currentSearchType = 'project';
+    let searchMenuOpen = false;
+    const searchTypeNames = { 'project': '项目', 'glm': 'GLM AI', 'github': 'GitHub', 'bing': 'Bing', 'bilibili': 'Bilibili', 'rcmd': 'rCMD' };
+
+    function toggleSearchMenu() {
+      searchMenuOpen = !searchMenuOpen;
+      var dropdown = document.getElementById('searchTypeDropdown');
+      var arrow = document.getElementById('searchArrow');
+      if (searchMenuOpen) {
+        dropdown.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+      } else {
+        dropdown.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    document.addEventListener('click', function(e) {
+      var btn = document.getElementById('searchTypeBtn');
+      if (btn && !btn.contains(e.target)) {
+        searchMenuOpen = false;
+        document.getElementById('searchTypeDropdown').classList.add('hidden');
+        document.getElementById('searchArrow').style.transform = 'rotate(0deg)';
+      }
+    });
+
+    function setSearchType(type) {
+      currentSearchType = type;
+      document.getElementById('searchTypeText').textContent = searchTypeNames[type];
+      searchMenuOpen = false;
+      document.getElementById('searchTypeDropdown').classList.add('hidden');
+      document.getElementById('searchArrow').style.transform = 'rotate(0deg)';
+      var placeholders = { 
+        'project': '搜索项目...', 
+        'glm': '问 GLM AI 任何问题...', 
+        'github': '搜索GitHub项目...', 
+        'bing': '搜索Bing...', 
+        'bilibili': '搜索Bilibili视频...', 
+        'rcmd': '输入指令（如：startmc）...' 
+      };
+      document.getElementById('searchInput').placeholder = placeholders[type];
+      
+      // 如果选择GLM，显示AI面板
+      if (type === 'glm') {
+        document.getElementById('aiPanel').classList.remove('hidden');
+      } else {
+        document.getElementById('aiPanel').classList.add('hidden');
+      }
+    }
+
+    function handleSearch() {
+      var query = document.getElementById('searchInput').value.trim();
+      switch(currentSearchType) {
+        case 'project':
+          window.location.href = 'search.html?q=' + encodeURIComponent(query);
+          break;
+        case 'glm':
+          if (query) {
+            sendAIMessage(query);
+            document.getElementById('searchInput').value = '';
+          }
+          break;
+        case 'github':
+          window.location.href = 'github-search.html?q=' + encodeURIComponent(query);
+          break;
+        case 'bing':
+          window.open('https://www.bing.com/search?q=' + encodeURIComponent(query), '_blank');
+          break;
+        case 'bilibili':
+          window.open('https://search.bilibili.com/all?keyword=' + encodeURIComponent(query), '_blank');
+          break;
+        case 'rcmd':
+          executeRCMD(query);
+          break;
+      }
+    }
+
+    function executeRCMD(cmd) {
+      const commands = {
+        'startmc': () => { window.open('EC1.12.html', '_blank'); },
+        'mc': () => { window.open('EC1.12.html', '_blank'); },
+        'eaglercraft': () => { window.open('EC1.12.html', '_blank'); },
+        'projects': () => { window.location.href = 'projects.html'; },
+        'toolbox': () => { window.location.href = 'toolbox.html'; },
+        'cloud': () => { window.location.href = 'cloud.html'; },
+        'chat': () => { window.location.href = 'chat.html'; },
+        'profile': () => { window.location.href = 'profile.html'; },
+        'help': () => { alert('可用指令：\nstartmc / mc - 启动Minecraft\nprojects - 打开项目页面\ntoolbox - 打开百宝箱\ncloud - 打开云盘\nchat - 打开聊天\nprofile - 打开个人中心'); }
+      };
+      const lowerCmd = cmd.toLowerCase().replace(/\s+/g, '');
+      if (commands[lowerCmd]) {
+        commands[lowerCmd]();
+      } else {
+        alert('未知指令: ' + cmd + '\n输入 help 查看可用指令');
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('keypress', function(e) { 
+      if (e.key === 'Enter') handleSearch(); 
+    });
+
+    // GLM AI 功能
+    let aiMessages = [];
+    let aiConversationHistory = [];
+    
+    function closeAIPanel() {
+      document.getElementById('aiPanel').classList.add('hidden');
+      setSearchType('project');
+    }
+    
+    // 本地AI响应系统（当API不可用时使用）
+    function getLocalAIResponse(query) {
+      const q = query.toLowerCase();
+      
+      // 问候语
+      if (q.match(/^(你好|hi|hello|嗨|您好)/)) {
+        const greetings = [
+          '你好！我是 GLM AI 助手，很高兴为你服务！有什么我可以帮助你的吗？',
+          '嗨！欢迎来到 Rui Hub，我是你的 AI 助手。今天想聊点什么？',
+          '你好呀！有什么问题尽管问我，我会尽力帮助你的~'
+        ];
+        return greetings[Math.floor(Math.random() * greetings.length)];
+      }
+      
+      // 自我介绍
+      if (q.match(/(你是谁|介绍一下你自己|你的名字)/)) {
+        return '我是 GLM AI 助手，由智谱AI开发的大语言模型。我现在运行在 Rui Hub 平台上，可以帮助你回答问题、提供建议、进行对话等。虽然我的能力有限，但我会尽力帮助你！';
+      }
+      
+      // Rui Hub 相关
+      if (q.match(/(rui hub|这个网站|这个平台)/)) {
+        return '**Rui Hub** 是一个个人博客平台，提供以下功能：\n\n- 📁 **项目展示** - 展示各种有趣的项目\n- ☁️ **云盘服务** - 存储和管理你的文件\n- 💬 **即时聊天** - 与其他用户交流\n- 📦 **百宝箱** - 各种实用工具\n\n欢迎探索和使用各项功能！';
+      }
+      
+      // 编程相关
+      if (q.match(/(编程|代码|python|javascript|java|html|css)/)) {
+        return '编程是一项非常有趣的技能！我可以帮你：\n\n1. 解答编程概念问题\n2. 提供代码思路和建议\n3. 解释错误和调试方法\n\n你有什么具体的编程问题想了解吗？';
+      }
+      
+      // 天气
+      if (q.match(/(天气|温度|下雨)/)) {
+        return '抱歉，我目前无法获取实时天气数据。建议你查看当地的天气预报应用或网站获取准确的天气信息。';
+      }
+      
+      // 时间
+      if (q.match(/(时间|几点|日期|今天)/)) {
+        const now = new Date();
+        return `现在是 **${now.toLocaleDateString('zh-CN')}**，**${now.toLocaleTimeString('zh-CN')}**。`;
+      }
+      
+      // 感谢
+      if (q.match(/(谢谢|感谢|thanks)/)) {
+        const thanks = [
+          '不客气！有什么其他问题随时问我~',
+          '很高兴能帮到你！还有其他需要帮助的吗？',
+          '不用谢！这是我的荣幸~ 🎉'
+        ];
+        return thanks[Math.floor(Math.random() * thanks.length)];
+      }
+      
+      // 再见
+      if (q.match(/(再见|拜拜|bye|晚安)/)) {
+        return '再见！祝你有个美好的一天！欢迎随时回来聊天~ 👋';
+      }
+      
+      // 笑话
+      if (q.match(/(笑话|搞笑|有趣)/)) {
+        const jokes = [
+          '为什么程序员总是分不清万圣节和圣诞节？因为 Oct 31 = Dec 25！ 😄',
+          '有一个程序员去买菜，老婆说买一个西瓜，如果有西红柿就买两个。结果程序员买了两个西瓜。为什么？因为程序员看到了西红柿！🍉',
+          '程序员的三大谎言：1. 这个bug很容易修复 2. 我马上就改 3. 文档明天就写 😂'
+        ];
+        return jokes[Math.floor(Math.random() * jokes.length)];
+      }
+      
+      // 帮助
+      if (q.match(/(帮助|help|能做什么|功能)/)) {
+        return '我可以帮助你：\n\n- 💬 **日常对话** - 聊天、问候、讲笑话\n- 📚 **知识问答** - 回答各种知识性问题\n- 💻 **编程帮助** - 编程相关的问题和建议\n- 🔍 **信息查询** - 时间等基本信息\n\n试着问我任何问题吧！';
+      }
+      
+      // 默认回复
+      const defaults = [
+        `关于"${query}"，这是一个有趣的问题！让我想想...\n\n作为一个 AI 助手，我会尽力提供帮助。你能告诉我更多细节吗？这样我可以给你更准确的回答。`,
+        `我理解你想了解"${query}"。虽然我现在的能力有限，但我会尽力帮助你。你可以换个方式提问，或者告诉我更多背景信息。`,
+        `这是一个很好的问题！关于"${query}"，你有什么具体的想法或疑问吗？我很乐意和你深入讨论。`
+      ];
+      return defaults[Math.floor(Math.random() * defaults.length)];
+    }
+    
+    async function sendAIMessage(customQuery) {
+      const input = document.getElementById('aiInput');
+      const query = customQuery || input.value.trim();
+      if (!query) return;
+      
+      const messagesContainer = document.getElementById('aiMessages');
+      const sendBtn = document.getElementById('aiSendBtn');
+      
+      // 添加用户消息
+      const userMsgHtml = `
+        <div class="ai-message flex gap-3 justify-end">
+          <div class="flex-1 bg-violet-100 rounded-xl p-3 text-sm text-gray-700 max-w-[80%]">
+            <p>${escapeHtml(query)}</p>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm flex-shrink-0">👤</div>
+        </div>
+      `;
+      messagesContainer.insertAdjacentHTML('beforeend', userMsgHtml);
+      
+      // 添加思考中提示
+      const thinkingHtml = `
+        <div id="thinkingMsg" class="ai-message flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center text-white text-sm flex-shrink-0">🤖</div>
+          <div class="flex-1 bg-white rounded-xl p-3 text-sm text-gray-700 border border-gray-100">
+            <div class="flex gap-1">
+              <span class="thinking-dot w-2 h-2 bg-violet-500 rounded-full"></span>
+              <span class="thinking-dot w-2 h-2 bg-violet-500 rounded-full"></span>
+              <span class="thinking-dot w-2 h-2 bg-violet-500 rounded-full"></span>
+            </div>
+          </div>
+        </div>
+      `;
+      messagesContainer.insertAdjacentHTML('beforeend', thinkingHtml);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      input.value = '';
+      sendBtn.disabled = true;
+      
+      let aiResponse = '';
+      
+      try {
+        // 尝试调用后端API
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: query })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.response) {
+          aiResponse = data.response;
+        } else {
+          throw new Error('API响应失败');
+        }
+      } catch (err) {
+        // API不可用时，使用本地AI响应
+        console.log('API不可用，使用本地响应');
+        await new Promise(resolve => setTimeout(resolve, 800)); // 模拟思考时间
+        aiResponse = getLocalAIResponse(query);
+      }
+      
+      // 移除思考提示
+      document.getElementById('thinkingMsg')?.remove();
+      
+      // 添加AI回复
+      const aiMsgHtml = `
+        <div class="ai-message flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center text-white text-sm flex-shrink-0">🤖</div>
+          <div class="flex-1 bg-white rounded-xl p-3 text-sm text-gray-700 border border-gray-100 markdown-content">
+            ${marked.parse(aiResponse)}
+          </div>
+        </div>
+      `;
+      messagesContainer.insertAdjacentHTML('beforeend', aiMsgHtml);
+      
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      sendBtn.disabled = false;
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // AI输入框回车发送
+    document.getElementById('aiInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendAIMessage();
+    });
+  </script>
+</body>
+</html>

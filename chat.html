@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RuiChat - Rui Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .contact-item:hover { background: #f3f4f6; }
+    .contact-item.active { background: #e0e7ff; }
+    .message-bubble { max-width: 70%; word-break: break-word; }
+    .avatar { 
+      width: 48px; height: 48px; 
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 18px; color: white;
+      border-radius: 8px; flex-shrink: 0; overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-sm { width: 40px; height: 40px; font-size: 14px; }
+    .avatar-lg { width: 80px; height: 80px; font-size: 28px; }
+    .online-dot { 
+      position: absolute; bottom: 2px; right: 2px; 
+      width: 10px; height: 10px; 
+      background: #22c55e; border: 2px solid white; 
+      border-radius: 50%; 
+    }
+    .fade-in { animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* 右键菜单 */
+    .context-menu {
+      position: fixed; z-index: 1000;
+      background: white; border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      border: 1px solid #e5e7eb;
+      min-width: 160px; padding: 6px 0;
+      animation: fadeIn 0.15s ease-out;
+    }
+    .context-menu-item {
+      padding: 10px 16px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; color: #374151;
+      transition: background 0.15s;
+    }
+    .context-menu-item:hover { background: #f3f4f6; }
+    .context-menu-item.danger { color: #ef4444; }
+    .context-menu-item.danger:hover { background: #fef2f2; }
+    .context-menu-divider { height: 1px; background: #e5e7eb; margin: 4px 0; }
+    /* 头像选择器 */
+    .avatar-option {
+      width: 56px; height: 56px; border-radius: 12px;
+      cursor: pointer; transition: all 0.2s;
+      border: 3px solid transparent;
+    }
+    .avatar-option:hover { transform: scale(1.1); }
+    .avatar-option.selected { border-color: #22c55e; box-shadow: 0 0 0 2px #86efac; }
+  </style>
+</head>
+<body class="h-screen bg-gray-100 overflow-hidden">
+  
+  <!-- 右键菜单 -->
+  <div id="contextMenu" class="context-menu hidden"></div>
+
+  <!-- 未登录提示 -->
+  <div id="loginRequired" class="hidden fixed inset-0 z-50 bg-white flex items-center justify-center">
+    <div class="text-center p-8">
+      <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-3xl">💬</div>
+      <h2 class="text-2xl font-semibold text-gray-800 mb-2">RuiChat</h2>
+      <p class="text-gray-500 mb-6">请先登录以使用聊天功能</p>
+      <button onclick="showLoginModal()" class="px-8 py-3 bg-green-500 text-white font-medium rounded-full hover:bg-green-600 transition-colors">登录</button>
+      <p class="mt-4 text-sm text-gray-400">没有账号？<a href="register.html" class="text-green-500 hover:text-green-600">立即注册</a></p>
+    </div>
+  </div>
+
+  <!-- 主容器 -->
+  <div id="mainContainer" class="h-full flex">
+    
+    <!-- 左侧边栏 -->
+    <div class="w-80 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+      
+      <!-- 用户信息头部 -->
+      <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+        <div class="relative cursor-pointer" onclick="showProfileModal()" title="点击设置头像和资料">
+          <div id="myAvatar" class="avatar bg-gradient-to-br from-green-400 to-green-600">我</div>
+          <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow">
+            <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span id="myUsername" class="font-semibold text-gray-800 truncate">用户</span>
+            <span id="myUid" class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded cursor-pointer" onclick="copyUid()" title="点击复制">UID</span>
+          </div>
+          <p id="myBio" class="text-xs text-gray-500 mt-0.5 truncate">点击头像设置资料</p>
+        </div>
+        <div class="flex items-center gap-1">
+          <button onclick="showAddFriendModal()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500" title="添加好友">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+          </button>
+          <button onclick="showSettingsModal()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500" title="设置">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 搜索框 -->
+      <div class="p-3">
+        <div class="relative">
+          <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input type="text" id="searchInput" placeholder="搜索联系人..." class="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:bg-gray-200 transition-colors" oninput="filterContacts()">
+        </div>
+      </div>
+      
+      <!-- 联系人列表 -->
+      <div class="flex-1 overflow-y-auto" id="contactList">
+        <div class="text-center text-gray-400 text-sm py-8">
+          <p>加载中...</p>
+        </div>
+      </div>
+      
+      <!-- 底部导航 -->
+      <div class="border-t border-gray-100 p-2 flex justify-around">
+        <button onclick="switchTab('chat')" class="tab-btn flex flex-col items-center p-2 text-green-500" data-tab="chat">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          <span class="text-xs mt-1">聊天</span>
+        </button>
+        <button onclick="switchTab('contacts')" class="tab-btn flex flex-col items-center p-2 text-gray-400" data-tab="contacts">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          <span class="text-xs mt-1">通讯录</span>
+        </button>
+        <button onclick="goHome()" class="tab-btn flex flex-col items-center p-2 text-gray-400">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+          <span class="text-xs mt-1">主页</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 右侧聊天区域 -->
+    <div class="flex-1 flex flex-col bg-gray-50" id="chatArea">
+      
+      <!-- 空状态 -->
+      <div id="emptyState" class="flex-1 flex items-center justify-center">
+        <div class="text-center">
+          <div class="w-24 h-24 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 text-4xl">💬</div>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">RuiChat</h3>
+          <p class="text-gray-500">选择一个联系人开始聊天</p>
+          <button onclick="showAddFriendModal()" class="mt-4 px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">添加好友</button>
+        </div>
+      </div>
+      
+      <!-- 聊天界面 -->
+      <div id="chatView" class="hidden flex-1 flex flex-col">
+        
+        <!-- 聊天头部 -->
+        <div id="chatHeader" class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between cursor-pointer" onclick="showContactInfo()">
+          <div class="flex items-center gap-3">
+            <div id="chatAvatar" class="avatar avatar-sm bg-gradient-to-br from-blue-400 to-blue-600">?</div>
+            <div>
+              <h3 id="chatName" class="font-semibold text-gray-800">联系人</h3>
+              <p id="chatStatus" class="text-xs text-gray-500">离线</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="event.stopPropagation(); refreshChat()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500" title="刷新">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 消息区域 -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        
+        <!-- 输入区域 -->
+        <div class="bg-white border-t border-gray-200 p-4">
+          <div class="flex items-end gap-3">
+            <button onclick="showEmojiPicker()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </button>
+            <div class="flex-1 relative">
+              <textarea id="messageInput" placeholder="输入消息..." rows="1" class="w-full px-4 py-3 bg-gray-100 rounded-2xl text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-green-500/20 resize-none transition-all" onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+            </div>
+            <button onclick="sendMessage()" class="w-10 h-10 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 个人资料弹窗 -->
+  <div id="profileModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden fade-in">
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-800">个人资料</h3>
+        <button onclick="closeProfileModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-6">
+        <!-- 头像设置 -->
+        <div class="text-center mb-6">
+          <div id="profileAvatarLarge" class="avatar avatar-lg bg-gradient-to-br from-green-400 to-green-600 mx-auto mb-4">我</div>
+          <p class="text-sm text-gray-500 mb-3">选择头像</p>
+          <div class="flex flex-wrap justify-center gap-2 mb-4" id="avatarOptions">
+            <!-- 预设头像 -->
+          </div>
+          <div class="mt-4">
+            <label class="text-sm text-gray-600">或输入头像URL:</label>
+            <input type="text" id="customAvatarUrl" placeholder="https://..." class="w-full mt-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500">
+          </div>
+        </div>
+        
+        <!-- 显示名称 -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">显示名称</label>
+          <input type="text" id="profileDisplayName" placeholder="你的显示名称" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500">
+        </div>
+        
+        <!-- 个性签名 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">个性签名</label>
+          <input type="text" id="profileBio" placeholder="写点什么介绍自己..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500">
+        </div>
+        
+        <div id="profileError" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 mb-4"></div>
+        
+        <button onclick="saveProfile()" class="w-full py-2.5 bg-green-500 text-white font-medium rounded-xl hover:bg-green-600 transition-colors">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden fade-in">
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-800">设置</h3>
+        <button onclick="closeSettingsModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-4 space-y-2">
+        <button onclick="showProfileModal(); closeSettingsModal();" class="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          <span class="text-sm text-gray-700">编辑资料</span>
+        </button>
+        <button onclick="showChangePasswordModal(); closeSettingsModal();" class="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+          <span class="text-sm text-gray-700">修改密码</span>
+        </button>
+        <button onclick="clearLocalData()" class="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+          <span class="text-sm text-gray-700">清除本地缓存</span>
+        </button>
+        <div class="border-t border-gray-100 my-2"></div>
+        <button onclick="logout()" class="w-full flex items-center gap-3 p-3 hover:bg-red-50 rounded-xl transition-colors text-red-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          <span class="text-sm">退出登录</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加好友弹窗 -->
+  <div id="addFriendModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden fade-in">
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-800">添加好友</h3>
+        <button onclick="closeAddFriendModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-4 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">通过UID添加</label>
+          <div class="flex gap-2">
+            <input type="text" id="uidInput" placeholder="输入6位UID" maxlength="6" class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500">
+            <button onclick="searchByUid()" class="px-4 py-2.5 bg-green-500 text-white text-sm font-medium rounded-xl hover:bg-green-600">搜索</button>
+          </div>
+        </div>
+        
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+          <div class="relative flex justify-center"><span class="bg-white px-3 text-sm text-gray-400">或者</span></div>
+        </div>
+        
+        <div class="text-center">
+          <button onclick="randomMatch()" class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity">
+            🎲 随机匹配好友
+          </button>
+          <p class="text-xs text-gray-400 mt-2">随机匹配一位在线用户</p>
+        </div>
+        
+        <div id="searchResult" class="hidden">
+          <div class="p-4 bg-gray-50 rounded-xl">
+            <div class="flex items-center gap-3">
+              <div id="resultAvatar" class="avatar avatar-sm bg-gray-300">?</div>
+              <div class="flex-1">
+                <p id="resultName" class="font-medium text-gray-800">-</p>
+                <p id="resultUid" class="text-xs text-gray-500">UID: -</p>
+              </div>
+              <button onclick="addFriend()" id="addFriendBtn" class="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600">添加</button>
+            </div>
+          </div>
+        </div>
+        
+        <div id="addError" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 联系人信息弹窗 -->
+  <div id="contactInfoModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden fade-in">
+      <div class="p-6 text-center">
+        <div id="contactInfoAvatar" class="avatar avatar-lg bg-gradient-to-br from-blue-400 to-blue-600 mx-auto mb-4">?</div>
+        <h3 id="contactInfoName" class="text-lg font-semibold text-gray-800">用户名</h3>
+        <p id="contactInfoUid" class="text-sm text-gray-500 mb-2">UID: -</p>
+        <p id="contactInfoBio" class="text-sm text-gray-600 mb-4">暂无签名</p>
+        <div class="flex gap-2 justify-center">
+          <button onclick="startChat()" class="px-6 py-2 bg-green-500 text-white font-medium rounded-full hover:bg-green-600">发消息</button>
+          <button onclick="deleteFriendConfirm()" class="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-full hover:bg-gray-200">删除好友</button>
+        </div>
+      </div>
+      <div class="border-t border-gray-100 p-4">
+        <button onclick="closeContactInfoModal()" class="w-full py-2 text-sm text-gray-500 hover:text-gray-700">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 登录弹窗 -->
+  <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden fade-in">
+      <div class="p-6 border-b border-gray-100">
+        <h2 class="text-lg font-semibold text-gray-900">登录 RuiChat</h2>
+      </div>
+      <form id="authForm" class="p-6 space-y-4" onsubmit="handleLogin(event)">
+        <div id="loginError" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"></div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">用户名 / UID</label>
+          <input id="loginUsername" type="text" placeholder="请输入用户名或UID" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">密码</label>
+          <input id="loginPassword" type="password" placeholder="请输入密码" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500" required>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-gray-300 text-green-500 focus:ring-green-500">
+          <label for="rememberMe" class="text-sm text-gray-600">保持登录（7天）</label>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-green-500 text-white font-medium rounded-xl hover:bg-green-600 transition-colors">登录</button>
+        <div class="text-center text-sm text-gray-500">
+          没有账号？<a href="register.html" class="text-green-500 hover:text-green-600 font-medium">立即注册</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast通知 -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <!-- 引入用户管理系统 -->
+  <script src="auth.js"></script>
+
+  <script>
+    // ==================== 配置 ====================
+    const CHAT_REPO = 'RuiweihanHub/ruichat';
+    const USER_REPO = 'RuiweihanHub/ruiuser';
+    const getToken = () => ['ghp_', 'aJxbQaU0S56e8pl6N8zrkWoHkfJHi92GOiFQ'].join('');
+    
+    // 预设头像
+    const PRESET_AVATARS = [
+      { id: 'cat', emoji: '🐱', color: 'from-orange-400 to-orange-600' },
+      { id: 'dog', emoji: '🐕', color: 'from-amber-400 to-amber-600' },
+      { id: 'panda', emoji: '🐼', color: 'from-gray-400 to-gray-600' },
+      { id: 'fox', emoji: '🦊', color: 'from-orange-500 to-red-500' },
+      { id: 'penguin', emoji: '🐧', color: 'from-slate-400 to-slate-600' },
+      { id: 'rabbit', emoji: '🐰', color: 'from-pink-400 to-pink-600' },
+      { id: 'lion', emoji: '🦁', color: 'from-yellow-400 to-yellow-600' },
+      { id: 'bear', emoji: '🐻', color: 'from-amber-500 to-amber-700' },
+      { id: 'koala', emoji: '🐨', color: 'from-gray-400 to-blue-400' },
+      { id: 'unicorn', emoji: '🦄', color: 'from-purple-400 to-pink-500' },
+      { id: 'star', emoji: '⭐', color: 'from-yellow-400 to-orange-400' },
+      { id: 'rocket', emoji: '🚀', color: 'from-blue-500 to-purple-600' },
+    ];
+    
+    const AVATAR_COLORS = [
+      'from-red-400 to-red-600', 'from-orange-400 to-orange-600', 'from-amber-400 to-amber-600',
+      'from-yellow-400 to-yellow-600', 'from-lime-400 to-lime-600', 'from-green-400 to-green-600',
+      'from-emerald-400 to-emerald-600', 'from-teal-400 to-teal-600', 'from-cyan-400 to-cyan-600',
+      'from-sky-400 to-sky-600', 'from-blue-400 to-blue-600', 'from-indigo-400 to-indigo-600',
+      'from-violet-400 to-violet-600', 'from-purple-400 to-purple-600', 'from-fuchsia-400 to-fuchsia-600',
+      'from-pink-400 to-pink-600', 'from-rose-400 to-rose-600'
+    ];
+    
+    // ==================== 状态 ====================
+    let currentUser = null;
+    let contacts = [];
+    let currentChat = null;
+    let messagesFileSha = null;
+    let usersFileSha = null;
+    let pendingFriend = null;
+    let currentViewingContact = null;
+    let selectedAvatar = null;
+    
+    // ==================== 工具函数 ====================
+    function toBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary);
+    }
+    
+    function fromBase64(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function getAvatarColor(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+    }
+    
+    function getAvatarLetter(name) {
+      return name.charAt(0).toUpperCase();
+    }
+    
+    function renderAvatar(avatarData, name) {
+      if (avatarData && avatarData.startsWith('http')) {
+        return `<img src="${escapeHtml(avatarData)}" alt="${escapeHtml(name)}">`;
+      } else if (avatarData && avatarData.length <= 2) {
+        return avatarData; // emoji
+      } else {
+        return getAvatarLetter(name);
+      }
+    }
+    
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-gray-700';
+      toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium fade-in`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // ==================== 右键菜单 ====================
+    let contextMenuTarget = null;
+    
+    function showContextMenu(e, type, data) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      contextMenuTarget = { type, data };
+      const menu = document.getElementById('contextMenu');
+      
+      let items = [];
+      
+      if (type === 'contact') {
+        items = [
+          { icon: '💬', text: '发送消息', action: () => openChat(data.uid) },
+          { icon: '👤', text: '查看资料', action: () => showContactInfoById(data) },
+          { divider: true },
+          { icon: '🗑️', text: '删除好友', action: () => deleteFriendConfirmById(data), danger: true }
+        ];
+      } else if (type === 'message') {
+        items = [
+          { icon: '📋', text: '复制', action: () => copyMessage(data.text) },
+          { divider: true },
+          { icon: '🗑️', text: '撤回', action: () => recallMessage(data), danger: true, show: data.isMine }
+        ];
+      }
+      
+      items = items.filter(item => item.show !== false);
+      
+      menu.innerHTML = items.map(item => {
+        if (item.divider) return '<div class="context-menu-divider"></div>';
+        return `<div class="context-menu-item ${item.danger ? 'danger' : ''}" onclick="contextMenuAction('${item.text}')">${item.icon}<span>${item.text}</span></div>`;
+      }).join('');
+      
+      // 定位
+      const x = Math.min(e.clientX, window.innerWidth - 180);
+      const y = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 20);
+      menu.style.left = x + 'px';
+      menu.style.top = y + 'px';
+      menu.classList.remove('hidden');
+    }
+    
+    function hideContextMenu() {
+      document.getElementById('contextMenu').classList.add('hidden');
+    }
+    
+    function contextMenuAction(action) {
+      hideContextMenu();
+      const target = contextMenuTarget;
+      
+      if (action === '发送消息') openChat(target.data.uid);
+      else if (action === '查看资料') showContactInfoById(target.data);
+      else if (action === '删除好友') deleteFriendConfirmById(target.data);
+      else if (action === '复制') copyMessage(target.data.text);
+      else if (action === '撤回') recallMessage(target.data);
+    }
+    
+    function copyMessage(text) {
+      navigator.clipboard.writeText(text).then(() => showToast('已复制'));
+    }
+    
+    document.addEventListener('click', hideContextMenu);
+    
+    // ==================== 登录相关 ====================
+    function showLoginModal() {
+      document.getElementById('loginModal').classList.remove('hidden');
+      document.getElementById('loginModal').classList.add('flex');
+    }
+    
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('loginModal').classList.remove('flex');
+    }
+    
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const remember = document.getElementById('rememberMe').checked;
+      
+      if (!username || !password) {
+        document.getElementById('loginError').textContent = '请输入用户名和密码';
+        document.getElementById('loginError').classList.remove('hidden');
+        return;
+      }
+      
+      try {
+        const auth = await getAuth();
+        const result = await auth.validateUser(username, password);
+        
+        if (result.success) {
+          currentUser = {
+            username: result.user.username,
+            uid: result.user.uid,
+            displayName: result.user.displayName || result.user.username,
+            avatar: result.user.profile?.avatar,
+            bio: result.user.profile?.bio
+          };
+          
+          sessionStorage.setItem('rui_user', currentUser.username);
+          sessionStorage.setItem('rui_uid', currentUser.uid);
+          
+          if (remember) {
+            localStorage.setItem('rui_user_remember', currentUser.username);
+            localStorage.setItem('rui_uid_remember', currentUser.uid);
+            localStorage.setItem('rui_user_expire', (Date.now() + 7 * 24 * 60 * 60 * 1000).toString());
+          }
+          
+          closeLoginModal();
+          showToast('登录成功');
+          initApp();
+        } else {
+          document.getElementById('loginError').textContent = result.error;
+          document.getElementById('loginError').classList.remove('hidden');
+        }
+      } catch (err) {
+        document.getElementById('loginError').textContent = '登录失败，请重试';
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+    
+    // ==================== 初始化 ====================
+    function checkLogin() {
+      // 使用 auth.js 中的统一登录状态同步函数
+      const loginState = syncLoginState();
+      
+      if (loginState.isLoggedIn) {
+        currentUser = { username: loginState.username, uid: loginState.uid, displayName: loginState.username };
+        initApp();
+        return true;
+      }
+      
+      document.getElementById('loginRequired').classList.remove('hidden');
+      return false;
+    }
+    
+    async function initApp() {
+      document.getElementById('loginRequired').classList.add('hidden');
+      
+      // 加载用户完整信息
+      await loadCurrentUserInfo();
+      
+      // 更新用户信息显示
+      updateUserDisplay();
+      
+      // 加载联系人
+      await loadContacts();
+    }
+    
+    async function loadCurrentUserInfo() {
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main&_=${Date.now()}`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const content = JSON.parse(fromBase64(data.content));
+          const userData = content.users.find(u => u.uid === currentUser.uid || u.username === currentUser.username);
+          
+          if (userData) {
+            currentUser.displayName = userData.displayName || userData.username;
+            currentUser.avatar = userData.profile?.avatar;
+            currentUser.bio = userData.profile?.bio;
+          }
+        }
+      } catch (err) {
+        console.error('加载用户信息失败:', err);
+      }
+    }
+    
+    function updateUserDisplay() {
+      document.getElementById('myUsername').textContent = currentUser.displayName;
+      document.getElementById('myUid').textContent = currentUser.uid;
+      document.getElementById('myBio').textContent = currentUser.bio || '点击头像设置资料';
+      
+      const avatarEl = document.getElementById('myAvatar');
+      if (currentUser.avatar && currentUser.avatar.startsWith('http')) {
+        avatarEl.innerHTML = `<img src="${escapeHtml(currentUser.avatar)}" alt="头像">`;
+        avatarEl.className = 'avatar';
+      } else if (currentUser.avatar) {
+        avatarEl.textContent = currentUser.avatar;
+        avatarEl.className = `avatar bg-gradient-to-br ${getAvatarColor(currentUser.displayName)}`;
+      } else {
+        avatarEl.textContent = getAvatarLetter(currentUser.displayName);
+        avatarEl.className = `avatar bg-gradient-to-br ${getAvatarColor(currentUser.displayName)}`;
+      }
+    }
+    
+    // ==================== 头像设置 ====================
+    function initAvatarOptions() {
+      const container = document.getElementById('avatarOptions');
+      container.innerHTML = PRESET_AVATARS.map(a => `
+        <div class="avatar-option bg-gradient-to-br ${a.color} flex items-center justify-center text-2xl" 
+             onclick="selectAvatar('${a.emoji}')" data-avatar="${a.emoji}">${a.emoji}</div>
+      `).join('');
+    }
+    
+    function selectAvatar(emoji) {
+      selectedAvatar = emoji;
+      document.querySelectorAll('.avatar-option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.avatar === emoji);
+      });
+      
+      const largeAvatar = document.getElementById('profileAvatarLarge');
+      largeAvatar.textContent = emoji;
+      largeAvatar.className = 'avatar avatar-lg mx-auto mb-4 bg-gradient-to-br ' + getAvatarColor(currentUser.displayName);
+      
+      document.getElementById('customAvatarUrl').value = '';
+    }
+    
+    function showProfileModal() {
+      document.getElementById('profileModal').classList.remove('hidden');
+      document.getElementById('profileModal').classList.add('flex');
+      
+      initAvatarOptions();
+      
+      // 填充当前信息
+      document.getElementById('profileDisplayName').value = currentUser.displayName || '';
+      document.getElementById('profileBio').value = currentUser.bio || '';
+      document.getElementById('customAvatarUrl').value = (currentUser.avatar && currentUser.avatar.startsWith('http')) ? currentUser.avatar : '';
+      
+      const largeAvatar = document.getElementById('profileAvatarLarge');
+      if (currentUser.avatar && currentUser.avatar.startsWith('http')) {
+        largeAvatar.innerHTML = `<img src="${escapeHtml(currentUser.avatar)}" alt="头像">`;
+        largeAvatar.className = 'avatar avatar-lg mx-auto mb-4';
+      } else if (currentUser.avatar) {
+        largeAvatar.textContent = currentUser.avatar;
+        largeAvatar.className = 'avatar avatar-lg mx-auto mb-4 bg-gradient-to-br ' + getAvatarColor(currentUser.displayName);
+      } else {
+        largeAvatar.textContent = getAvatarLetter(currentUser.displayName);
+        largeAvatar.className = 'avatar avatar-lg mx-auto mb-4 bg-gradient-to-br ' + getAvatarColor(currentUser.displayName);
+      }
+      
+      selectedAvatar = null;
+      document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+    }
+    
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+      document.getElementById('profileModal').classList.remove('flex');
+    }
+    
+    async function saveProfile() {
+      const displayName = document.getElementById('profileDisplayName').value.trim();
+      const bio = document.getElementById('profileBio').value.trim();
+      const customUrl = document.getElementById('customAvatarUrl').value.trim();
+      
+      if (!displayName) {
+        document.getElementById('profileError').textContent = '请输入显示名称';
+        document.getElementById('profileError').classList.remove('hidden');
+        return;
+      }
+      
+      const avatar = customUrl || selectedAvatar || currentUser.avatar;
+      
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const content = JSON.parse(fromBase64(data.content));
+          
+          const userIndex = content.users.findIndex(u => u.uid === currentUser.uid);
+          if (userIndex !== -1) {
+            content.users[userIndex].displayName = displayName;
+            content.users[userIndex].profile = content.users[userIndex].profile || {};
+            content.users[userIndex].profile.avatar = avatar;
+            content.users[userIndex].profile.bio = bio;
+          }
+          
+          const saveRes = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `Update profile: ${currentUser.username}`,
+              content: toBase64(JSON.stringify(content, null, 2)),
+              sha: data.sha
+            })
+          });
+          
+          if (saveRes.ok) {
+            currentUser.displayName = displayName;
+            currentUser.avatar = avatar;
+            currentUser.bio = bio;
+            
+            updateUserDisplay();
+            closeProfileModal();
+            showToast('资料已保存');
+          } else {
+            document.getElementById('profileError').textContent = '保存失败';
+            document.getElementById('profileError').classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        document.getElementById('profileError').textContent = '保存失败: ' + err.message;
+        document.getElementById('profileError').classList.remove('hidden');
+      }
+    }
+    
+    // ==================== 设置 ====================
+    function showSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('hidden');
+      document.getElementById('settingsModal').classList.add('flex');
+    }
+    
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+      document.getElementById('settingsModal').classList.remove('flex');
+    }
+    
+    function clearLocalData() {
+      if (confirm('确定要清除所有本地缓存吗？这将清除登录状态。')) {
+        sessionStorage.clear();
+        localStorage.clear();
+        location.reload();
+      }
+    }
+    
+    function copyUid() {
+      navigator.clipboard.writeText(currentUser.uid).then(() => showToast('UID已复制'));
+    }
+    
+    // ==================== 联系人管理 ====================
+    async function loadContacts() {
+      const token = getToken();
+      const contactList = document.getElementById('contactList');
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main&_=${Date.now()}`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          usersFileSha = data.sha;
+          const content = JSON.parse(fromBase64(data.content));
+          
+          const userData = content.users.find(u => u.uid === currentUser.uid || u.username === currentUser.username);
+          const friendUids = userData?.friends || [];
+          
+          contacts = content.users
+            .filter(u => u.uid !== currentUser.uid && u.username !== currentUser.username)
+            .filter(u => friendUids.includes(u.uid))
+            .map(u => ({
+              uid: u.uid,
+              username: u.username,
+              displayName: u.displayName || u.username,
+              status: u.status || 'active',
+              avatar: u.profile?.avatar,
+              bio: u.profile?.bio,
+              lastMessage: null,
+              unread: 0
+            }));
+          
+          contacts.unshift({
+            uid: 'GROUP_CHAT',
+            username: '群聊',
+            displayName: '公共群聊',
+            status: 'group',
+            lastMessage: null,
+            unread: 0
+          });
+          
+          renderContacts();
+        }
+      } catch (err) {
+        console.error('加载联系人失败:', err);
+        contacts = [{ uid: 'GROUP_CHAT', username: '群聊', displayName: '公共群聊', status: 'group' }];
+        renderContacts();
+      }
+    }
+    
+    function renderContacts() {
+      const contactList = document.getElementById('contactList');
+      
+      if (contacts.length === 0) {
+        contactList.innerHTML = `
+          <div class="text-center text-gray-400 text-sm py-8">
+            <p>暂无联系人</p>
+            <button onclick="showAddFriendModal()" class="mt-2 text-green-500 hover:text-green-600">添加好友</button>
+          </div>
+        `;
+        return;
+      }
+      
+      contactList.innerHTML = contacts.map(contact => {
+        const isActive = currentChat?.uid === contact.uid;
+        let avatarContent, avatarClass;
+        
+        if (contact.status === 'group') {
+          avatarContent = '👥';
+          avatarClass = 'avatar avatar-sm bg-gradient-to-br from-orange-400 to-orange-600';
+        } else if (contact.avatar && contact.avatar.startsWith('http')) {
+          avatarContent = `<img src="${escapeHtml(contact.avatar)}" alt="">`;
+          avatarClass = 'avatar avatar-sm';
+        } else if (contact.avatar) {
+          avatarContent = contact.avatar;
+          avatarClass = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(contact.displayName)}`;
+        } else {
+          avatarContent = getAvatarLetter(contact.displayName);
+          avatarClass = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(contact.displayName)}`;
+        }
+        
+        return `
+          <div class="contact-item flex items-center gap-3 px-4 py-3 cursor-pointer ${isActive ? 'active' : ''}" 
+               onclick="openChat('${contact.uid}')"
+               oncontextmenu="showContextMenu(event, 'contact', ${JSON.stringify(contact).replace(/"/g, '&quot;')})">
+            <div class="relative">
+              <div class="${avatarClass}">${avatarContent}</div>
+              ${contact.status !== 'group' ? '<div class="online-dot"></div>' : ''}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="font-medium text-gray-800 truncate">${contact.displayName}</span>
+              </div>
+              <p class="text-sm text-gray-500 truncate">${contact.status === 'group' ? '点击进入群聊' : (contact.bio || '点击开始聊天')}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function filterContacts() {
+      // TODO
+    }
+    
+    // ==================== 聊天功能 ====================
+    async function openChat(uid) {
+      const contact = contacts.find(c => c.uid === uid);
+      if (!contact) return;
+      
+      currentChat = contact;
+      
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('chatView').classList.remove('hidden');
+      
+      // 更新聊天头部
+      let avatarContent, avatarClass;
+      if (contact.status === 'group') {
+        avatarContent = '👥';
+        avatarClass = 'avatar avatar-sm bg-gradient-to-br from-orange-400 to-orange-600';
+      } else if (contact.avatar && contact.avatar.startsWith('http')) {
+        avatarContent = `<img src="${escapeHtml(contact.avatar)}" alt="">`;
+        avatarClass = 'avatar avatar-sm';
+      } else if (contact.avatar) {
+        avatarContent = contact.avatar;
+        avatarClass = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(contact.displayName)}`;
+      } else {
+        avatarContent = getAvatarLetter(contact.displayName);
+        avatarClass = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(contact.displayName)}`;
+      }
+      
+      document.getElementById('chatAvatar').className = avatarClass;
+      document.getElementById('chatAvatar').innerHTML = avatarContent;
+      document.getElementById('chatName').textContent = contact.displayName;
+      document.getElementById('chatStatus').textContent = contact.status === 'group' ? '群聊' : '在线';
+      
+      renderContacts();
+      await loadMessages();
+    }
+    
+    async function loadMessages() {
+      if (!currentChat) return;
+      
+      const token = getToken();
+      const container = document.getElementById('messagesContainer');
+      
+      try {
+        const fileName = currentChat.status === 'group' ? 'messages.json' : `chat_${[currentUser.uid, currentChat.uid].sort().join('_')}.json`;
+        
+        const res = await fetch(`https://api.github.com/repos/${CHAT_REPO}/contents/${fileName}?ref=main&_=${Date.now()}`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          messagesFileSha = data.sha;
+          const content = JSON.parse(fromBase64(data.content));
+          renderMessages(content.messages || []);
+        } else if (res.status === 404) {
+          messagesFileSha = null;
+          renderMessages([]);
+        }
+      } catch (err) {
+        console.error('加载消息失败:', err);
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><p>加载失败</p></div>';
+      }
+    }
+    
+    function renderMessages(messages) {
+      const container = document.getElementById('messagesContainer');
+      
+      if (messages.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-400 text-sm py-8"><p>暂无消息，发送第一条消息吧！</p></div>';
+        return;
+      }
+      
+      container.innerHTML = messages.map(msg => {
+        const isMine = msg.user === currentUser.username || msg.uid === currentUser.uid;
+        const time = new Date(msg.time).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        
+        let avatarContent, avatarClass;
+        if (msg.avatar && msg.avatar.startsWith('http')) {
+          avatarContent = `<img src="${escapeHtml(msg.avatar)}" alt="">`;
+          avatarClass = 'avatar avatar-sm';
+        } else if (msg.avatar) {
+          avatarContent = msg.avatar;
+          avatarClass = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(msg.user)}`;
+        } else {
+          avatarContent = getAvatarLetter(msg.user);
+          avatarClass = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(msg.user)}`;
+        }
+        
+        return `
+          <div class="flex gap-3 ${isMine ? 'flex-row-reverse' : ''} fade-in"
+               oncontextmenu="showContextMenu(event, 'message', ${JSON.stringify({text: msg.text, isMine, time: msg.time}).replace(/"/g, '&quot;')})">
+            <div class="${avatarClass}">${avatarContent}</div>
+            <div class="message-bubble">
+              ${!isMine ? `<p class="text-xs text-gray-500 mb-1">${msg.user}</p>` : ''}
+              <div class="${isMine ? 'bg-green-500 text-white' : 'bg-white'} rounded-2xl px-4 py-2.5 shadow-sm">
+                <p class="text-sm">${escapeHtml(msg.text)}</p>
+              </div>
+              <p class="text-xs text-gray-400 mt-1 ${isMine ? 'text-right' : ''}">${time}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    async function sendMessage() {
+      if (!currentChat) return;
+      
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const messageText = text;
+      input.value = '';
+      input.style.height = 'auto';
+      
+      const token = getToken();
+      const fileName = currentChat.status === 'group' ? 'messages.json' : `chat_${[currentUser.uid, currentChat.uid].sort().join('_')}.json`;
+      
+      try {
+        let messages = [];
+        let sha = null;
+        
+        const getRes = await fetch(`https://api.github.com/repos/${CHAT_REPO}/contents/${fileName}?ref=main&_=${Date.now()}`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (getRes.ok) {
+          const data = await getRes.json();
+          sha = data.sha;
+          const content = JSON.parse(fromBase64(data.content));
+          messages = content.messages || [];
+        }
+        
+        const newMsg = {
+          user: currentUser.username,
+          uid: currentUser.uid,
+          text: messageText,
+          time: new Date().toISOString(),
+          avatar: currentUser.avatar
+        };
+        messages.push(newMsg);
+        
+        const body = {
+          message: `Chat: ${currentUser.username} - ${new Date().toISOString()}`,
+          content: toBase64(JSON.stringify({ messages }, null, 2))
+        };
+        if (sha) body.sha = sha;
+        
+        const saveRes = await fetch(`https://api.github.com/repos/${CHAT_REPO}/contents/${fileName}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        
+        if (saveRes.ok) {
+          const saveData = await saveRes.json();
+          messagesFileSha = saveData.content.sha;
+          renderMessages(messages);
+        } else {
+          showToast('发送失败', 'error');
+        }
+      } catch (err) {
+        console.error('发送消息失败:', err);
+        showToast('发送失败', 'error');
+      }
+    }
+    
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+    
+    function autoResize(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+    
+    function refreshChat() {
+      loadMessages();
+      showToast('已刷新');
+    }
+    
+    function showEmojiPicker() {
+      showToast('表情功能开发中');
+    }
+    
+    // ==================== 添加好友 ====================
+    function showAddFriendModal() {
+      document.getElementById('addFriendModal').classList.remove('hidden');
+      document.getElementById('addFriendModal').classList.add('flex');
+      document.getElementById('searchResult').classList.add('hidden');
+      document.getElementById('addError').classList.add('hidden');
+      document.getElementById('uidInput').value = '';
+    }
+    
+    function closeAddFriendModal() {
+      document.getElementById('addFriendModal').classList.add('hidden');
+      document.getElementById('addFriendModal').classList.remove('flex');
+    }
+    
+    async function searchByUid() {
+      const uid = document.getElementById('uidInput').value.trim();
+      if (!uid) {
+        document.getElementById('addError').textContent = '请输入UID';
+        document.getElementById('addError').classList.remove('hidden');
+        return;
+      }
+      
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const content = JSON.parse(fromBase64(data.content));
+          const user = content.users.find(u => u.uid === uid);
+          
+          if (user) {
+            pendingFriend = { uid: user.uid, username: user.username, displayName: user.displayName, avatar: user.profile?.avatar };
+            
+            document.getElementById('resultName').textContent = user.displayName;
+            document.getElementById('resultUid').textContent = `UID: ${user.uid}`;
+            
+            const avatarEl = document.getElementById('resultAvatar');
+            if (user.profile?.avatar && user.profile.avatar.startsWith('http')) {
+              avatarEl.innerHTML = `<img src="${escapeHtml(user.profile.avatar)}" alt="">`;
+              avatarEl.className = 'avatar avatar-sm';
+            } else {
+              avatarEl.textContent = getAvatarLetter(user.displayName);
+              avatarEl.className = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(user.displayName)}`;
+            }
+            
+            document.getElementById('searchResult').classList.remove('hidden');
+            document.getElementById('addError').classList.add('hidden');
+          } else {
+            document.getElementById('addError').textContent = '未找到该用户';
+            document.getElementById('addError').classList.remove('hidden');
+            document.getElementById('searchResult').classList.add('hidden');
+          }
+        }
+      } catch (err) {
+        document.getElementById('addError').textContent = '搜索失败';
+        document.getElementById('addError').classList.remove('hidden');
+      }
+    }
+    
+    async function randomMatch() {
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const content = JSON.parse(fromBase64(data.content));
+          
+          const myData = content.users.find(u => u.uid === currentUser.uid);
+          const myFriends = myData?.friends || [];
+          const availableUsers = content.users.filter(u => 
+            u.uid !== currentUser.uid && 
+            !myFriends.includes(u.uid) &&
+            u.status === 'active'
+          );
+          
+          if (availableUsers.length > 0) {
+            const randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+            pendingFriend = { uid: randomUser.uid, username: randomUser.username, displayName: randomUser.displayName, avatar: randomUser.profile?.avatar };
+            
+            document.getElementById('resultName').textContent = randomUser.displayName;
+            document.getElementById('resultUid').textContent = `UID: ${randomUser.uid}`;
+            
+            const avatarEl = document.getElementById('resultAvatar');
+            if (randomUser.profile?.avatar && randomUser.profile.avatar.startsWith('http')) {
+              avatarEl.innerHTML = `<img src="${escapeHtml(randomUser.profile.avatar)}" alt="">`;
+              avatarEl.className = 'avatar avatar-sm';
+            } else {
+              avatarEl.textContent = getAvatarLetter(randomUser.displayName);
+              avatarEl.className = `avatar avatar-sm bg-gradient-to-br ${getAvatarColor(randomUser.displayName)}`;
+            }
+            
+            document.getElementById('searchResult').classList.remove('hidden');
+            document.getElementById('addError').classList.add('hidden');
+          } else {
+            document.getElementById('addError').textContent = '暂无可匹配的用户';
+            document.getElementById('addError').classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        document.getElementById('addError').textContent = '匹配失败';
+        document.getElementById('addError').classList.remove('hidden');
+      }
+    }
+    
+    async function addFriend() {
+      if (!pendingFriend) return;
+      
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const content = JSON.parse(fromBase64(data.content));
+          
+          const myIndex = content.users.findIndex(u => u.uid === currentUser.uid);
+          if (myIndex !== -1) {
+            if (!content.users[myIndex].friends) content.users[myIndex].friends = [];
+            if (!content.users[myIndex].friends.includes(pendingFriend.uid)) {
+              content.users[myIndex].friends.push(pendingFriend.uid);
+            }
+          }
+          
+          const friendIndex = content.users.findIndex(u => u.uid === pendingFriend.uid);
+          if (friendIndex !== -1) {
+            if (!content.users[friendIndex].friends) content.users[friendIndex].friends = [];
+            if (!content.users[friendIndex].friends.includes(currentUser.uid)) {
+              content.users[friendIndex].friends.push(currentUser.uid);
+            }
+          }
+          
+          const saveRes = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `Add friend: ${currentUser.username} <-> ${pendingFriend.username}`,
+              content: toBase64(JSON.stringify(content, null, 2)),
+              sha: data.sha
+            })
+          });
+          
+          if (saveRes.ok) {
+            showToast(`已添加 ${pendingFriend.displayName} 为好友`);
+            closeAddFriendModal();
+            loadContacts();
+          } else {
+            showToast('添加失败', 'error');
+          }
+        }
+      } catch (err) {
+        showToast('添加失败', 'error');
+      }
+    }
+    
+    // ==================== 联系人信息 ====================
+    function showContactInfo() {
+      if (!currentChat || currentChat.status === 'group') return;
+      
+      currentViewingContact = currentChat;
+      
+      let avatarContent, avatarClass;
+      if (currentChat.avatar && currentChat.avatar.startsWith('http')) {
+        avatarContent = `<img src="${escapeHtml(currentChat.avatar)}" alt="">`;
+        avatarClass = 'avatar avatar-lg mx-auto mb-4';
+      } else if (currentChat.avatar) {
+        avatarContent = currentChat.avatar;
+        avatarClass = `avatar avatar-lg mx-auto mb-4 bg-gradient-to-br ${getAvatarColor(currentChat.displayName)}`;
+      } else {
+        avatarContent = getAvatarLetter(currentChat.displayName);
+        avatarClass = `avatar avatar-lg mx-auto mb-4 bg-gradient-to-br ${getAvatarColor(currentChat.displayName)}`;
+      }
+      
+      document.getElementById('contactInfoAvatar').className = avatarClass;
+      document.getElementById('contactInfoAvatar').innerHTML = avatarContent;
+      document.getElementById('contactInfoName').textContent = currentChat.displayName;
+      document.getElementById('contactInfoUid').textContent = `UID: ${currentChat.uid}`;
+      document.getElementById('contactInfoBio').textContent = currentChat.bio || '暂无签名';
+      
+      document.getElementById('contactInfoModal').classList.remove('hidden');
+      document.getElementById('contactInfoModal').classList.add('flex');
+    }
+    
+    function showContactInfoById(contact) {
+      currentViewingContact = contact;
+      showContactInfo();
+    }
+    
+    function closeContactInfoModal() {
+      document.getElementById('contactInfoModal').classList.add('hidden');
+      document.getElementById('contactInfoModal').classList.remove('flex');
+    }
+    
+    function startChat() {
+      if (currentViewingContact) {
+        closeContactInfoModal();
+        openChat(currentViewingContact.uid);
+      }
+    }
+    
+    function deleteFriendConfirm() {
+      if (!currentViewingContact) return;
+      deleteFriendConfirmById(currentViewingContact);
+    }
+    
+    function deleteFriendConfirmById(contact) {
+      if (confirm(`确定要删除好友 ${contact.displayName} 吗？`)) {
+        deleteFriend(contact.uid);
+      }
+    }
+    
+    async function deleteFriend(uid) {
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const content = JSON.parse(fromBase64(data.content));
+          
+          // 从我的好友列表删除
+          const myIndex = content.users.findIndex(u => u.uid === currentUser.uid);
+          if (myIndex !== -1 && content.users[myIndex].friends) {
+            content.users[myIndex].friends = content.users[myIndex].friends.filter(f => f !== uid);
+          }
+          
+          // 从对方好友列表删除
+          const friendIndex = content.users.findIndex(u => u.uid === uid);
+          if (friendIndex !== -1 && content.users[friendIndex].friends) {
+            content.users[friendIndex].friends = content.users[friendIndex].friends.filter(f => f !== currentUser.uid);
+          }
+          
+          const saveRes = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `Remove friend: ${currentUser.username} <-> ${uid}`,
+              content: toBase64(JSON.stringify(content, null, 2)),
+              sha: data.sha
+            })
+          });
+          
+          if (saveRes.ok) {
+            showToast('已删除好友');
+            closeContactInfoModal();
+            
+            // 清空当前聊天
+            if (currentChat && currentChat.uid === uid) {
+              currentChat = null;
+              document.getElementById('chatView').classList.add('hidden');
+              document.getElementById('emptyState').classList.remove('hidden');
+            }
+            
+            loadContacts();
+          } else {
+            showToast('删除失败', 'error');
+          }
+        }
+      } catch (err) {
+        showToast('删除失败', 'error');
+      }
+    }
+    
+    // ==================== 其他功能 ====================
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-green-500');
+        btn.classList.add('text-gray-400');
+      });
+      event.currentTarget.classList.remove('text-gray-400');
+      event.currentTarget.classList.add('text-green-500');
+    }
+    
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+    
+    function logout() {
+      sessionStorage.removeItem('rui_user');
+      sessionStorage.removeItem('rui_uid');
+      localStorage.removeItem('rui_user_remember');
+      localStorage.removeItem('rui_uid_remember');
+      localStorage.removeItem('rui_user_expire');
+      location.reload();
+    }
+    
+    // ==================== 自动刷新 ====================
+    setInterval(() => {
+      if (currentChat) loadMessages();
+    }, 5000);
+    
+    // ==================== 启动 ====================
+    checkLogin();
+  </script>
+</body>
+</html>

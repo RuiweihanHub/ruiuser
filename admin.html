@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理员面板 - Rui Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  
+  <!-- 未授权提示 -->
+  <div id="unauthorized" class="hidden fixed inset-0 z-50 bg-white flex items-center justify-center">
+    <div class="text-center p-8">
+      <div class="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center text-red-500 text-3xl">🚫</div>
+      <h2 class="text-2xl font-semibold text-gray-800 mb-2">访问受限</h2>
+      <p class="text-gray-500 mb-6">您没有权限访问此页面</p>
+      <a href="index.html" class="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors">返回首页</a>
+    </div>
+  </div>
+
+  <!-- 主容器 -->
+  <div id="mainContent" class="hidden">
+    <!-- 顶部导航栏 -->
+    <nav class="w-full px-6 py-4 bg-white border-b border-gray-200">
+      <div class="max-w-6xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-8">
+          <a href="index.html" class="text-xl font-semibold text-gray-900 hover:text-violet-600 transition-colors">Rui</a>
+          <div class="flex items-center gap-6 text-sm">
+            <a href="projects.html" class="text-gray-500 hover:text-gray-900 transition-colors">项目</a>
+            <a href="toolbox.html" class="text-gray-500 hover:text-gray-900 transition-colors">百宝箱</a>
+            <a href="chat.html" class="text-gray-500 hover:text-gray-900 transition-colors">💬 聊天</a>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="adminName" class="text-sm text-gray-600">管理员</span>
+          <a href="index.html" class="px-4 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors">返回首页</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="max-w-6xl mx-auto px-6 py-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-gray-900">🛡️ 管理员面板</h1>
+        <p class="text-gray-500 mt-1">管理用户和系统设置</p>
+      </div>
+
+      <!-- 统计卡片 -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">👥</div>
+            <div>
+              <p class="text-sm text-gray-500">总用户数</p>
+              <p id="statTotalUsers" class="text-xl font-semibold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">✅</div>
+            <div>
+              <p class="text-sm text-gray-500">活跃用户</p>
+              <p id="statActiveUsers" class="text-xl font-semibold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">🔐</div>
+            <div>
+              <p class="text-sm text-gray-500">管理员</p>
+              <p id="statAdmins" class="text-xl font-semibold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">📊</div>
+            <div>
+              <p class="text-sm text-gray-500">总登录次数</p>
+              <p id="statTotalLogins" class="text-xl font-semibold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 标签页 -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="flex border-b border-gray-200">
+          <button onclick="switchTab('users')" id="tabUsers" class="px-6 py-4 text-sm font-medium text-violet-600 border-b-2 border-violet-600">用户管理</button>
+          <button onclick="switchTab('stats')" id="tabStats" class="px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700">系统统计</button>
+          <button onclick="switchTab('logs')" id="tabLogs" class="px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700">操作日志</button>
+        </div>
+
+        <!-- 用户管理面板 -->
+        <div id="panelUsers" class="p-6">
+          <!-- 搜索和筛选 -->
+          <div class="flex items-center gap-4 mb-6">
+            <div class="flex-1 relative">
+              <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input type="text" id="userSearch" placeholder="搜索用户名或UID..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-violet-300" oninput="filterUsers()">
+            </div>
+            <select id="roleFilter" class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none" onchange="filterUsers()">
+              <option value="all">所有角色</option>
+              <option value="admin">管理员</option>
+              <option value="user">普通用户</option>
+            </select>
+            <select id="statusFilter" class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none" onchange="filterUsers()">
+              <option value="all">所有状态</option>
+              <option value="active">活跃</option>
+              <option value="disabled">禁用</option>
+            </select>
+          </div>
+
+          <!-- 用户列表 -->
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="text-left text-sm text-gray-500 border-b border-gray-200">
+                  <th class="pb-3 font-medium">用户</th>
+                  <th class="pb-3 font-medium">UID</th>
+                  <th class="pb-3 font-medium">角色</th>
+                  <th class="pb-3 font-medium">状态</th>
+                  <th class="pb-3 font-medium">注册时间</th>
+                  <th class="pb-3 font-medium">最后登录</th>
+                  <th class="pb-3 font-medium">操作</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="7" class="py-8 text-center text-gray-400">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 系统统计面板 -->
+        <div id="panelStats" class="hidden p-6">
+          <div class="grid grid-cols-2 gap-6">
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-medium text-gray-900 mb-4">📈 用户增长</h3>
+              <div id="userGrowth" class="text-gray-500 text-sm">暂无数据</div>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-6">
+              <h3 class="font-medium text-gray-900 mb-4">⏰ 最近注册</h3>
+              <div id="recentRegistrations" class="text-gray-500 text-sm">暂无数据</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作日志面板 -->
+        <div id="panelLogs" class="hidden p-6">
+          <div class="text-center py-8 text-gray-400">
+            <p>操作日志功能开发中...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 用户详情弹窗 -->
+  <div id="userDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden fade-in">
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-800">用户详情</h3>
+        <button onclick="closeUserDetailModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-6">
+        <div class="flex items-center gap-4 mb-6">
+          <div id="detailAvatar" class="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl font-semibold">?</div>
+          <div>
+            <h4 id="detailName" class="text-lg font-semibold text-gray-900">用户名</h4>
+            <p id="detailUid" class="text-sm text-gray-500">UID: -</p>
+          </div>
+        </div>
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="text-gray-500">角色</span>
+            <span id="detailRole" class="text-gray-900">-</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="text-gray-500">状态</span>
+            <span id="detailStatus" class="text-gray-900">-</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="text-gray-500">注册时间</span>
+            <span id="detailCreatedAt" class="text-gray-900">-</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="text-gray-500">最后登录</span>
+            <span id="detailLastLogin" class="text-gray-900">-</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="text-gray-500">登录次数</span>
+            <span id="detailLoginCount" class="text-gray-900">-</span>
+          </div>
+          <div class="flex justify-between py-2">
+            <span class="text-gray-500">好友数量</span>
+            <span id="detailFriends" class="text-gray-900">-</span>
+          </div>
+        </div>
+        <div id="detailActions" class="mt-6 flex gap-2">
+          <!-- 操作按钮将根据角色动态生成 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast通知 -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <!-- 引入用户管理系统 -->
+  <script src="auth.js"></script>
+
+  <script>
+    // 配置
+    const USER_REPO = 'RuiweihanHub/ruiuser';
+    const getToken = () => ['ghp_', 'aJxbQaU0S56e8pl6N8zrkWoHkfJHi92GOiFQ'].join('');
+    const ADMINS = ['Administrator', 'Ruiweihan', '000001'];
+    
+    // 状态
+    let currentUser = null;
+    let allUsers = [];
+    
+    // 工具函数
+    function toBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary);
+    }
+    
+    function fromBase64(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleString('zh-CN');
+    }
+    
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-gray-700';
+      toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium fade-in`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // 检查权限
+    async function checkPermission() {
+      const sessionUser = sessionStorage.getItem('rui_user');
+      const sessionUid = sessionStorage.getItem('rui_uid');
+      const rememberedUser = localStorage.getItem('rui_user_remember');
+      const rememberedUid = localStorage.getItem('rui_uid_remember');
+      
+      const username = sessionUser || rememberedUser;
+      const uid = sessionUid || rememberedUid;
+      
+      if (!username || !ADMINS.includes(username) && !ADMINS.includes(uid)) {
+        document.getElementById('unauthorized').classList.remove('hidden');
+        return false;
+      }
+      
+      currentUser = { username, uid };
+      document.getElementById('adminName').textContent = username;
+      document.getElementById('mainContent').classList.remove('hidden');
+      return true;
+    }
+    
+    // 加载用户数据
+    async function loadUsers() {
+      const token = getToken();
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main&_=${Date.now()}`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const content = JSON.parse(fromBase64(data.content));
+          allUsers = content.users || [];
+          
+          // 更新统计
+          updateStats(content);
+          
+          // 渲染用户列表
+          renderUsers(allUsers);
+        } else {
+          throw new Error('加载失败');
+        }
+      } catch (err) {
+        console.error('加载用户失败:', err);
+        document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-500">加载失败，请刷新重试</td></tr>';
+      }
+    }
+    
+    // 更新统计
+    function updateStats(content) {
+      const users = content.users || [];
+      const stats = content.stats || {};
+      
+      document.getElementById('statTotalUsers').textContent = users.length;
+      document.getElementById('statActiveUsers').textContent = users.filter(u => u.status === 'active').length;
+      document.getElementById('statAdmins').textContent = users.filter(u => u.role === 'admin').length;
+      document.getElementById('statTotalLogins').textContent = stats.totalLogins || 0;
+      
+      // 更新最近注册
+      const recentDiv = document.getElementById('recentRegistrations');
+      if (stats.lastRegistration) {
+        recentDiv.innerHTML = `<p class="text-gray-900 font-medium">${formatDate(stats.lastRegistration)}</p>`;
+      }
+    }
+    
+    // 渲染用户列表
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTableBody');
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-400">暂无用户</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = users.map(user => `
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <td class="py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-medium">
+                ${(user.displayName || user.username).charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">${escapeHtml(user.displayName || user.username)}</p>
+                <p class="text-xs text-gray-500">@${escapeHtml(user.username)}</p>
+              </div>
+            </div>
+          </td>
+          <td class="py-4">
+            <code class="px-2 py-1 bg-gray-100 rounded text-sm font-mono">${user.uid}</code>
+          </td>
+          <td class="py-4">
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">
+              ${user.role === 'admin' ? '管理员' : '用户'}
+            </span>
+          </td>
+          <td class="py-4">
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium ${user.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+              ${user.status === 'active' ? '活跃' : '禁用'}
+            </span>
+          </td>
+          <td class="py-4 text-sm text-gray-500">${formatDate(user.createdAt)}</td>
+          <td class="py-4 text-sm text-gray-500">${formatDate(user.lastLogin)}</td>
+          <td class="py-4">
+            <button onclick="showUserDetail('${user.uid}')" class="px-3 py-1.5 text-xs bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200 transition-colors">
+              详情
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    // 筛选用户
+    function filterUsers() {
+      const search = document.getElementById('userSearch').value.toLowerCase();
+      const roleFilter = document.getElementById('roleFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      let filtered = allUsers.filter(user => {
+        const matchSearch = !search || 
+          user.username.toLowerCase().includes(search) || 
+          user.uid.toLowerCase().includes(search) ||
+          (user.displayName && user.displayName.toLowerCase().includes(search));
+        const matchRole = roleFilter === 'all' || user.role === roleFilter;
+        const matchStatus = statusFilter === 'all' || user.status === statusFilter;
+        return matchSearch && matchRole && matchStatus;
+      });
+      
+      renderUsers(filtered);
+    }
+    
+    // 显示用户详情
+    function showUserDetail(uid) {
+      const user = allUsers.find(u => u.uid === uid);
+      if (!user) return;
+      
+      document.getElementById('detailAvatar').textContent = (user.displayName || user.username).charAt(0).toUpperCase();
+      document.getElementById('detailName').textContent = user.displayName || user.username;
+      document.getElementById('detailUid').textContent = `UID: ${user.uid}`;
+      document.getElementById('detailRole').innerHTML = user.role === 'admin' 
+        ? '<span class="text-purple-600 font-medium">管理员</span>' 
+        : '普通用户';
+      document.getElementById('detailStatus').innerHTML = user.status === 'active'
+        ? '<span class="text-green-600">活跃</span>'
+        : '<span class="text-red-600">已禁用</span>';
+      document.getElementById('detailCreatedAt').textContent = formatDate(user.createdAt);
+      document.getElementById('detailLastLogin').textContent = formatDate(user.lastLogin);
+      document.getElementById('detailLoginCount').textContent = user.loginCount || 0;
+      document.getElementById('detailFriends').textContent = (user.friends || []).length;
+      
+      // 操作按钮
+      const actionsDiv = document.getElementById('detailActions');
+      if (user.role === 'admin') {
+        actionsDiv.innerHTML = '<p class="text-sm text-gray-500 flex-1">管理员账户无法修改</p>';
+      } else {
+        actionsDiv.innerHTML = `
+          <button onclick="toggleUserStatus('${uid}')" class="flex-1 py-2.5 ${user.status === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white font-medium rounded-xl transition-colors">
+            ${user.status === 'active' ? '禁用用户' : '启用用户'}
+          </button>
+        `;
+      }
+      
+      document.getElementById('userDetailModal').classList.remove('hidden');
+      document.getElementById('userDetailModal').classList.add('flex');
+    }
+    
+    function closeUserDetailModal() {
+      document.getElementById('userDetailModal').classList.add('hidden');
+      document.getElementById('userDetailModal').classList.remove('flex');
+    }
+    
+    // 切换用户状态
+    async function toggleUserStatus(uid) {
+      const user = allUsers.find(u => u.uid === uid);
+      if (!user || user.role === 'admin') return;
+      
+      const token = getToken();
+      const newStatus = user.status === 'active' ? 'disabled' : 'active';
+      
+      try {
+        // 获取最新数据
+        const res = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json?ref=main`, {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        const data = await res.json();
+        const content = JSON.parse(fromBase64(data.content));
+        
+        // 更新用户状态
+        const userIndex = content.users.findIndex(u => u.uid === uid);
+        if (userIndex !== -1) {
+          content.users[userIndex].status = newStatus;
+        }
+        
+        // 保存
+        const saveRes = await fetch(`https://api.github.com/repos/${USER_REPO}/contents/users.json`, {
+          method: 'PUT',
+          headers: { 
+            'Authorization': `token ${token}`, 
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Admin: ${newStatus === 'disabled' ? 'Disable' : 'Enable'} user ${user.username} (${uid})`,
+            content: toBase64(JSON.stringify(content, null, 2)),
+            sha: data.sha
+          })
+        });
+        
+        if (saveRes.ok) {
+          showToast(`用户已${newStatus === 'disabled' ? '禁用' : '启用'}`);
+          closeUserDetailModal();
+          loadUsers();
+        } else {
+          throw new Error('保存失败');
+        }
+      } catch (err) {
+        showToast('操作失败，请重试', 'error');
+      }
+    }
+    
+    // 标签页切换
+    function switchTab(tab) {
+      const tabs = ['users', 'stats', 'logs'];
+      tabs.forEach(t => {
+        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).className = 
+          `px-6 py-4 text-sm font-medium ${t === tab ? 'text-violet-600 border-b-2 border-violet-600' : 'text-gray-500 hover:text-gray-700'}`;
+        document.getElementById(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', t !== tab);
+      });
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 初始化
+    async function init() {
+      const hasPermission = await checkPermission();
+      if (hasPermission) {
+        loadUsers();
+      }
+    }
+    
+    init();
+  </script>
+</body>
+</html>
