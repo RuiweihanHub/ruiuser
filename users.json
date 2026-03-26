@@ -1,6 +1,6 @@
 {
   "version": "2.1",
-  "nextUid": 3,
+  "nextUid": 4,
   "users": [
     {
       "uid": "Administrator",
@@ -61,23 +61,42 @@
         "bio": null,
         "email": null
       }
+    },
+    {
+      "uid": "000003",
+      "username": "xujiarui",
+      "displayName": "xujiarui",
+      "passwordHash": "00jcfs4l",
+      "role": "user",
+      "status": "active",
+      "createdAt": "2026-03-26T08:29:26.346Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "friends": [],
+      "profile": {
+        "avatar": null,
+        "bio": null,
+        "email": null
+      }
     }
   ],
   "index": {
     "byUid": {
       "Administrator": 0,
       "000001": 1,
-      "000002": 2
+      "000002": 2,
+      "000003": 3
     },
     "byUsername": {
       "Administrator": 0,
       "Ruiweihan": 1,
-      "Xvjiarui": 2
+      "Xvjiarui": 2,
+      "xujiarui": 3
     }
   },
   "stats": {
-    "totalUsers": 3,
+    "totalUsers": 4,
     "totalLogins": 0,
-    "lastRegistration": "2024-01-01T00:00:00Z"
+    "lastRegistration": "2026-03-26T08:29:26.346Z"
   }
 }
