@@ -1,6 +1,6 @@
 {
   "version": "2.1",
-  "nextUid": 4,
+  "nextUid": 5,
   "users": [
     {
       "uid": "Administrator",
@@ -81,6 +81,23 @@
         "bio": null,
         "email": null
       }
+    },
+    {
+      "uid": "000004",
+      "username": "ruitest",
+      "displayName": "ruitest",
+      "passwordHash": "00spl1hf",
+      "role": "user",
+      "status": "active",
+      "createdAt": "2026-03-27T13:22:06.044Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "friends": [],
+      "profile": {
+        "avatar": null,
+        "bio": null,
+        "email": null
+      }
     }
   ],
   "index": {
@@ -88,18 +105,20 @@
       "Administrator": 0,
       "000001": 1,
       "000002": 2,
-      "000003": 3
+      "000003": 3,
+      "000004": 4
     },
     "byUsername": {
       "Administrator": 0,
       "Ruiweihan": 1,
       "Xvjiarui": 2,
-      "xujiarui": 3
+      "xujiarui": 3,
+      "ruitest": 4
     }
   },
   "stats": {
-    "totalUsers": 4,
+    "totalUsers": 5,
     "totalLogins": 0,
-    "lastRegistration": "2026-03-26T08:29:26.346Z"
+    "lastRegistration": "2026-03-27T13:22:06.044Z"
   }
 }
