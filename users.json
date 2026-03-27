@@ -89,7 +89,7 @@
       "displayName": "ruitest",
       "passwordHash": "00spl1hf",
       "role": "user",
-      "status": "active",
+      "status": "disabled",
       "createdAt": "2026-03-27T13:22:06.044Z",
       "lastLogin": null,
       "loginCount": 0,
