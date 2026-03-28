@@ -56,7 +56,8 @@
       "loginCount": 0,
       "friends": [
         "Administrator",
-        "000001"
+        "000001",
+        "000004"
       ],
       "profile": {
         "avatar": null,
@@ -94,7 +95,8 @@
       "lastLogin": "2026-03-28T09:20:16.893Z",
       "loginCount": 1,
       "friends": [
-        "000001"
+        "000001",
+        "000002"
       ],
       "profile": {
         "avatar": null,
