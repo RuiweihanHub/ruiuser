@@ -91,8 +91,8 @@
       "role": "user",
       "status": "active",
       "createdAt": "2026-03-27T13:22:06.044Z",
-      "lastLogin": null,
-      "loginCount": 0,
+      "lastLogin": "2026-03-28T09:20:16.893Z",
+      "loginCount": 1,
       "friends": [
         "000001"
       ],
@@ -121,7 +121,7 @@
   },
   "stats": {
     "totalUsers": 5,
-    "totalLogins": 0,
+    "totalLogins": 1,
     "lastRegistration": "2026-03-27T13:22:06.044Z"
   }
 }
