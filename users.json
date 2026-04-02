@@ -1,6 +1,6 @@
 {
   "version": "2.1",
-  "nextUid": 6,
+  "nextUid": 7,
   "users": [
     {
       "uid": "Administrator",
@@ -125,6 +125,23 @@
         "bio": null,
         "email": null
       }
+    },
+    {
+      "uid": "000006",
+      "username": "WW",
+      "displayName": "WW",
+      "passwordHash": "00spl1hf",
+      "role": "user",
+      "status": "active",
+      "createdAt": "2026-04-02T08:00:24.503Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "friends": [],
+      "profile": {
+        "avatar": null,
+        "bio": null,
+        "email": null
+      }
     }
   ],
   "index": {
@@ -134,7 +151,8 @@
       "000002": 2,
       "000003": 3,
       "000004": 4,
-      "000005": 5
+      "000005": 5,
+      "000006": 6
     },
     "byUsername": {
       "Administrator": 0,
@@ -142,12 +160,13 @@
       "Xvjiarui": 2,
       "xujiarui": 3,
       "ruitest": 4,
-      "xx": 5
+      "xx": 5,
+      "WW": 6
     }
   },
   "stats": {
-    "totalUsers": 6,
+    "totalUsers": 7,
     "totalLogins": 1,
-    "lastRegistration": "2026-04-02T07:56:08.989Z"
+    "lastRegistration": "2026-04-02T08:00:24.503Z"
   }
 }
