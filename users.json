@@ -36,7 +36,8 @@
         "Administrator",
         "000002",
         "000003",
-        "000004"
+        "000004",
+        "000005"
       ],
       "profile": {
         "avatar": "🚀",
@@ -116,7 +117,8 @@
       "lastLogin": null,
       "loginCount": 0,
       "friends": [
-        "000002"
+        "000002",
+        "000001"
       ],
       "profile": {
         "avatar": null,
