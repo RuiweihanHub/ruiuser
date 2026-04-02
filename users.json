@@ -118,7 +118,8 @@
       "loginCount": 0,
       "friends": [
         "000002",
-        "000001"
+        "000001",
+        "000006"
       ],
       "profile": {
         "avatar": null,
@@ -136,7 +137,9 @@
       "createdAt": "2026-04-02T08:00:24.503Z",
       "lastLogin": null,
       "loginCount": 0,
-      "friends": [],
+      "friends": [
+        "000005"
+      ],
       "profile": {
         "avatar": null,
         "bio": null,
