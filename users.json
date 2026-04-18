@@ -1,6 +1,6 @@
 {
   "version": "2.1",
-  "nextUid": 8,
+  "nextUid": 9,
   "users": [
     {
       "uid": "Administrator",
@@ -166,6 +166,24 @@
         "bio": null,
         "email": null
       }
+    },
+    {
+      "uid": "000008",
+      "username": "Rui",
+      "displayName": "Rui",
+      "passwordHash": "001b67qx",
+      "role": "user",
+      "level": 0,
+      "status": "active",
+      "createdAt": "2026-04-18T03:47:42.825Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "friends": [],
+      "profile": {
+        "avatar": null,
+        "bio": null,
+        "email": null
+      }
     }
   ],
   "index": {
@@ -177,7 +195,8 @@
       "000004": 4,
       "000005": 5,
       "000006": 6,
-      "000007": 7
+      "000007": 7,
+      "000008": 8
     },
     "byUsername": {
       "Administrator": 0,
@@ -187,12 +206,13 @@
       "ruitest": 4,
       "xx": 5,
       "WW": 6,
-      "王芃毅": 7
+      "王芃毅": 7,
+      "Rui": 8
     }
   },
   "stats": {
-    "totalUsers": 8,
+    "totalUsers": 9,
     "totalLogins": 3,
-    "lastRegistration": "2026-04-16T07:58:10.888Z"
+    "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
 }
