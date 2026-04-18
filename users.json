@@ -176,8 +176,8 @@
       "level": 100,
       "status": "active",
       "createdAt": "2026-04-18T03:47:42.825Z",
-      "lastLogin": null,
-      "loginCount": 0,
+      "lastLogin": "2026-04-18T04:52:02.211Z",
+      "loginCount": 1,
       "friends": [],
       "profile": {
         "avatar": null,
@@ -212,7 +212,7 @@
   },
   "stats": {
     "totalUsers": 9,
-    "totalLogins": 3,
+    "totalLogins": 4,
     "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
 }
