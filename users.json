@@ -70,34 +70,13 @@
         "email": null
       },
       "level": 0
-    },
-    {
-      "uid": "000004",
-      "username": "ruitest",
-      "displayName": "ruitest",
-      "passwordHash": "00spl1hf",
-      "role": "user",
-      "status": "active",
-      "createdAt": "2026-03-27T13:22:06.044Z",
-      "lastLogin": "2026-04-19T09:41:27.938Z",
-      "loginCount": 2,
-      "friends": [
-        "000001",
-        "000002"
-      ],
-      "profile": {
-        "avatar": null,
-        "bio": null,
-        "email": null
-      }
     }
   ],
   "index": {
     "byUid": {
       "Administrator": 0,
       "000001": 1,
-      "000002": 2,
-      "000004": 3
+      "000002": 2
     },
     "byUsername": {
       "Administrator": 0,
@@ -112,7 +91,7 @@
     }
   },
   "stats": {
-    "totalUsers": 4,
+    "totalUsers": 3,
     "totalLogins": 5,
     "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
