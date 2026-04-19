@@ -49,7 +49,9 @@
       "experience": 5530,
       "lastDailyBonus": "2026-04-19",
       "level": 9,
-      "rcoins": 10000
+      "rcoins": 9000,
+      "pro": true,
+      "proExpiry": "2026-05-19T13:43:48.207Z"
     },
     {
       "uid": "000002",
