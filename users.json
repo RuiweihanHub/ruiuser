@@ -92,27 +92,6 @@
       }
     },
     {
-      "uid": "000005",
-      "username": "xx",
-      "displayName": "xx",
-      "passwordHash": "00spl1hf",
-      "role": "user",
-      "status": "active",
-      "createdAt": "2026-04-02T07:56:08.989Z",
-      "lastLogin": "2026-04-09T08:02:23.235Z",
-      "loginCount": 1,
-      "friends": [
-        "000002",
-        "000001",
-        "000006"
-      ],
-      "profile": {
-        "avatar": null,
-        "bio": null,
-        "email": null
-      }
-    },
-    {
       "uid": "000006",
       "username": "WW",
       "displayName": "WW",
@@ -174,10 +153,9 @@
       "000001": 1,
       "000002": 2,
       "000004": 3,
-      "000005": 4,
-      "000006": 5,
-      "000007": 6,
-      "000008": 7
+      "000006": 4,
+      "000007": 5,
+      "000008": 6
     },
     "byUsername": {
       "Administrator": 0,
@@ -192,7 +170,7 @@
     }
   },
   "stats": {
-    "totalUsers": 8,
+    "totalUsers": 7,
     "totalLogins": 5,
     "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
