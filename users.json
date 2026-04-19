@@ -90,24 +90,6 @@
         "bio": null,
         "email": null
       }
-    },
-    {
-      "uid": "000008",
-      "username": "Rui",
-      "displayName": "Rui",
-      "passwordHash": "001b67qx",
-      "role": "ma",
-      "level": 100,
-      "status": "active",
-      "createdAt": "2026-04-18T03:47:42.825Z",
-      "lastLogin": "2026-04-18T04:52:02.211Z",
-      "loginCount": 1,
-      "friends": [],
-      "profile": {
-        "avatar": null,
-        "bio": null,
-        "email": null
-      }
     }
   ],
   "index": {
@@ -115,8 +97,7 @@
       "Administrator": 0,
       "000001": 1,
       "000002": 2,
-      "000004": 3,
-      "000008": 4
+      "000004": 3
     },
     "byUsername": {
       "Administrator": 0,
@@ -131,7 +112,7 @@
     }
   },
   "stats": {
-    "totalUsers": 5,
+    "totalUsers": 4,
     "totalLogins": 5,
     "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
