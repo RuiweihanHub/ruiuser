@@ -1,0 +1,10 @@
+{
+  "firstVisitorNotification": {
+    "enabled": false,
+    "message": "正确授法 Rui Hub，识图片一输入意预订数据."
+  },
+  "announcement": {
+    "enabled": false,
+    "message": ""
+  }
+}
