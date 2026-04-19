@@ -1,6 +1,6 @@
 {
   "version": "2.1",
-  "nextUid": 9,
+  "nextUid": 10,
   "users": [
     {
       "uid": "Administrator",
@@ -74,13 +74,32 @@
       },
       "level": 0,
       "rcoins": 50
+    },
+    {
+      "uid": "000009",
+      "username": "RRR",
+      "displayName": "RRR",
+      "passwordHash": "00spl1hf",
+      "role": "user",
+      "level": 0,
+      "status": "active",
+      "createdAt": "2026-04-19T13:24:56.956Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "friends": [],
+      "profile": {
+        "avatar": null,
+        "bio": null,
+        "email": null
+      }
     }
   ],
   "index": {
     "byUid": {
       "Administrator": 0,
       "000001": 1,
-      "000002": 2
+      "000002": 2,
+      "000009": 3
     },
     "byUsername": {
       "Administrator": 0,
@@ -91,12 +110,13 @@
       "xx": 5,
       "WW": 6,
       "王芃毅": 7,
-      "Rui": 8
+      "Rui": 8,
+      "RRR": 3
     }
   },
   "stats": {
-    "totalUsers": 3,
+    "totalUsers": 4,
     "totalLogins": 6,
-    "lastRegistration": "2026-04-18T03:47:42.825Z"
+    "lastRegistration": "2026-04-19T13:24:56.956Z"
   }
 }
