@@ -92,23 +92,6 @@
       }
     },
     {
-      "uid": "000007",
-      "username": "王芃毅",
-      "displayName": "王芃毅",
-      "passwordHash": "00l2gmr0",
-      "role": "user",
-      "status": "active",
-      "createdAt": "2026-04-16T07:58:10.888Z",
-      "lastLogin": null,
-      "loginCount": 0,
-      "friends": [],
-      "profile": {
-        "avatar": null,
-        "bio": null,
-        "email": null
-      }
-    },
-    {
       "uid": "000008",
       "username": "Rui",
       "displayName": "Rui",
@@ -133,8 +116,7 @@
       "000001": 1,
       "000002": 2,
       "000004": 3,
-      "000007": 4,
-      "000008": 5
+      "000008": 4
     },
     "byUsername": {
       "Administrator": 0,
@@ -149,7 +131,7 @@
     }
   },
   "stats": {
-    "totalUsers": 6,
+    "totalUsers": 5,
     "totalLogins": 5,
     "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
