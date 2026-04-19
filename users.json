@@ -76,7 +76,7 @@
       "rcoins": 50
     },
     {
-      "uid": "000009",
+      "uid": "000003",
       "username": "RRR",
       "displayName": "RRR",
       "passwordHash": "00spl1hf",
@@ -99,7 +99,7 @@
       "Administrator": 0,
       "000001": 1,
       "000002": 2,
-      "000009": 3
+      "000003": 3
     },
     "byUsername": {
       "Administrator": 0,
