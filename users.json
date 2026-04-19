@@ -44,7 +44,9 @@
         "avatar": "https://img-blog.csdnimg.cn/f39ed8924fce40eb98728aaf47e39d82.jpeg?x-oss-process=image/resize,m_fixed,h_224,w_224",
         "bio": "系统管理员",
         "email": null
-      }
+      },
+      "experience": 30,
+      "lastDailyBonus": "2026-04-19"
     },
     {
       "uid": "000002",
