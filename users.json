@@ -72,26 +72,6 @@
       "level": 0
     },
     {
-      "uid": "000003",
-      "username": "xujiarui",
-      "displayName": "xujiarui",
-      "passwordHash": "00jcfs4l",
-      "role": "user",
-      "status": "active",
-      "createdAt": "2026-03-26T08:29:26.346Z",
-      "lastLogin": null,
-      "loginCount": 0,
-      "friends": [
-        "000001"
-      ],
-      "profile": {
-        "avatar": null,
-        "bio": null,
-        "email": null
-      },
-      "level": 100
-    },
-    {
       "uid": "000004",
       "username": "ruitest",
       "displayName": "ruitest",
@@ -193,12 +173,11 @@
       "Administrator": 0,
       "000001": 1,
       "000002": 2,
-      "000003": 3,
-      "000004": 4,
-      "000005": 5,
-      "000006": 6,
-      "000007": 7,
-      "000008": 8
+      "000004": 3,
+      "000005": 4,
+      "000006": 5,
+      "000007": 6,
+      "000008": 7
     },
     "byUsername": {
       "Administrator": 0,
@@ -213,7 +192,7 @@
     }
   },
   "stats": {
-    "totalUsers": 9,
+    "totalUsers": 8,
     "totalLogins": 5,
     "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
