@@ -92,26 +92,6 @@
       }
     },
     {
-      "uid": "000006",
-      "username": "WW",
-      "displayName": "WW",
-      "passwordHash": "00spl1hf",
-      "role": "user",
-      "status": "active",
-      "createdAt": "2026-04-02T08:00:24.503Z",
-      "lastLogin": "2026-04-09T08:04:33.022Z",
-      "loginCount": 1,
-      "friends": [
-        "000005",
-        "000001"
-      ],
-      "profile": {
-        "avatar": null,
-        "bio": null,
-        "email": null
-      }
-    },
-    {
       "uid": "000007",
       "username": "王芃毅",
       "displayName": "王芃毅",
@@ -153,9 +133,8 @@
       "000001": 1,
       "000002": 2,
       "000004": 3,
-      "000006": 4,
-      "000007": 5,
-      "000008": 6
+      "000007": 4,
+      "000008": 5
     },
     "byUsername": {
       "Administrator": 0,
@@ -170,7 +149,7 @@
     }
   },
   "stats": {
-    "totalUsers": 7,
+    "totalUsers": 6,
     "totalLogins": 5,
     "lastRegistration": "2026-04-18T03:47:42.825Z"
   }
