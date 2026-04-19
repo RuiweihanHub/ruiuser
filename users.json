@@ -174,7 +174,7 @@
       "passwordHash": "001b67qx",
       "role": "ma",
       "level": 100,
-      "status": "active",
+      "status": "disabled",
       "createdAt": "2026-04-18T03:47:42.825Z",
       "lastLogin": "2026-04-18T04:52:02.211Z",
       "loginCount": 1,
