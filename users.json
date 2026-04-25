@@ -93,7 +93,9 @@
         "avatar": null,
         "bio": null,
         "email": null
-      }
+      },
+      "experience": 30,
+      "lastDailyBonus": "2026-04-25"
     }
   ],
   "index": {
