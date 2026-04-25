@@ -1,6 +1,6 @@
 {
   "version": "2.1",
-  "nextUid": 11,
+  "nextUid": 12,
   "users": [
     {
       "uid": "Administrator",
@@ -96,6 +96,24 @@
       },
       "experience": 30,
       "lastDailyBonus": "2026-04-25"
+    },
+    {
+      "uid": "000011",
+      "username": "rrrrrrrrrrr",
+      "displayName": "rrrrrrrrrrr",
+      "passwordHash": "00om1bsr",
+      "role": "user",
+      "level": 0,
+      "status": "active",
+      "createdAt": "2026-04-25T03:35:26.080Z",
+      "lastLogin": null,
+      "loginCount": 0,
+      "friends": [],
+      "profile": {
+        "avatar": null,
+        "bio": null,
+        "email": "ruiweihan@outlook.com"
+      }
     }
   ],
   "index": {
@@ -103,18 +121,20 @@
       "Administrator": 0,
       "000001": 1,
       "000002": 2,
-      "000010": 3
+      "000010": 3,
+      "000011": 4
     },
     "byUsername": {
       "Administrator": 0,
       "Ruiweihan": 1,
       "Xvjiarui": 2,
-      "Test": 3
+      "Test": 3,
+      "rrrrrrrrrrr": 4
     }
   },
   "stats": {
-    "totalUsers": 4,
+    "totalUsers": 5,
     "totalLogins": 6,
-    "lastRegistration": "2026-04-25T03:21:20.694Z"
+    "lastRegistration": "2026-04-25T03:35:26.080Z"
   }
 }
