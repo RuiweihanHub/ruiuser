@@ -1,0 +1,42 @@
+[
+  {
+    "id": "exam_1777209757370",
+    "title": "测试",
+    "category": "编程",
+    "duration": 60,
+    "passLine": 60,
+    "note": "禁止使用AI",
+    "questions": [
+      {
+        "type": "choice",
+        "question": "局域网的概念是什么？",
+        "answer": "B",
+        "score": 10,
+        "explanation": "",
+        "options": {
+          "A": "公开",
+          "B": "在一个宽带范围内",
+          "C": "内部空间",
+          "D": "内网"
+        }
+      },
+      {
+        "type": "judge",
+        "question": "typedef和define意思一模一样",
+        "answer": "错",
+        "score": 10,
+        "explanation": ""
+      },
+      {
+        "type": "fill",
+        "question": "windows重命名最古老的规则是",
+        "answer": "8.3格式",
+        "score": 10,
+        "explanation": ""
+      }
+    ],
+    "totalScore": 30,
+    "author": "Ruiweihan",
+    "createdAt": "2026-04-26T13:22:37.370Z"
+  }
+]
