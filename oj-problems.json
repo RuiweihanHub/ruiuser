@@ -1,0 +1,24 @@
+[
+  {
+    "id": "oj_1777208927676",
+    "title": "输出Hello,World!",
+    "difficulty": "easy",
+    "description": "使用C++",
+    "inputDesc": "无",
+    "outputDesc": "Hello,World!",
+    "samples": [
+      {
+        "input": "无",
+        "output": "Hello,World!"
+      },
+      {
+        "input": "无",
+        "output": "Hello,World!"
+      }
+    ],
+    "timeLimit": 1,
+    "memoryLimit": 128,
+    "author": "Ruiweihan",
+    "createdAt": "2026-04-26T13:08:47.676Z"
+  }
+]
