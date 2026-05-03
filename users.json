@@ -21,7 +21,8 @@
         "bio": "系统管理员账户",
         "email": null
       },
-      "rcoins": 10000
+      "rcoins": 10000,
+      "pro": true
     },
     {
       "uid": "000001",
