@@ -22,7 +22,8 @@
         "email": null
       },
       "rcoins": 10000,
-      "pro": true
+      "pro": true,
+      "quickPass": "000000000"
     },
     {
       "uid": "000001",
@@ -51,7 +52,8 @@
       "level": 9,
       "rcoins": 19999926901,
       "pro": true,
-      "proExpiry": "2026-05-22T00:34:20.226Z"
+      "proExpiry": "2026-05-22T00:34:20.226Z",
+      "quickPass": "000000000"
     },
     {
       "uid": "000002",
@@ -76,7 +78,8 @@
       },
       "level": 1,
       "rcoins": 70050,
-      "experience": 50
+      "experience": 50,
+      "quickPass": "000000000"
     },
     {
       "uid": "000010",
@@ -96,7 +99,8 @@
         "email": null
       },
       "experience": 30,
-      "lastDailyBonus": "2026-04-25"
+      "lastDailyBonus": "2026-04-25",
+      "quickPass": "000000000"
     },
     {
       "uid": "000011",
@@ -114,7 +118,8 @@
         "avatar": null,
         "bio": null,
         "email": "ruiweihan@outlook.com"
-      }
+      },
+      "quickPass": "000000000"
     }
   ],
   "index": {
